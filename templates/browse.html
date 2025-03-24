@@ -1,0 +1,108 @@
+{% extends 'base.html'%} {% block content %}
+<main class="container">
+    
+<!--Results count and reset button-->
+    <div class="row">
+        <div class="col s5">
+            <p><span id="results_count">{{ results_count }}</span> Recipe{% if ((results_count > 1) or (results_count == 0)) %}s{% endif %} found
+            {% if selected_health_concerns or selected_main_ing or selected_recipe_type %}for
+            {% if selected_main_ing %} {{ selected_main_ing.capitalize() }}...{% endif %}
+            {% if selected_recipe_type %} {{ selected_recipe_type.capitalize() }}...{% endif %}
+            {% if selected_health_concerns %} {{ selected_health_concerns.capitalize() }} {% endif %}
+            {% endif %} sorted by highest rated first.
+            </p>
+        </div>
+        <div class="col s7 right-align">
+            <a href="{{ url_for('get_recipes', page_no=1) }}" class="btn-small waves-effect waves-light"><i class="material-icons right">sync</i>Reset</a>
+        </div>
+    </div>
+    
+<!--Filtering select dropdowns-->    
+    <div class="row filter-form white-background z-depth-2">
+        <form action="{{ url_for('get_recipes', page_no=1) }}" method="POST">
+            <div class="input-field col s12 m4 edit_category">
+                <select id="main_ing" name="main_ing">
+                    <option value="" disabled selected>Choose your option</option>
+                    {% for i in main_ing %}
+                    <option value="{{ i }}">{{ i.capitalize() }}</option>
+                    {% endfor %}
+                </select>
+                <label>Main Ingredient</label>
+            </div>
+            <div class="input-field col s12 m4 edit_category">
+                <select id="recipe_type" name="recipe_type">
+                    <option value="" disabled selected>Choose your option</option>
+                    {% for i in recipe_type %}
+                    <option value="{{ i }}">{{ i.capitalize() }}</option>
+                    {% endfor %}
+                </select>
+                <label>Recipe Type</label>
+            </div>
+            <div class="input-field col s12 m4 edit_category">
+                <select id="health_concerns" name="health_concerns">
+                    <option value="" disabled selected>Choose your option</option>
+                    {% for i in health_concerns %}
+                    <option value="{{ i }}">{{ i.capitalize() }}</option>
+                    {% endfor %}
+                </select>
+                <label>Health</label>
+            </div>
+            <button class="btn-small waves-effect waves-light" type='submit'>Update Results<i class="material-icons right">filter_list</i></button>
+        </form>
+    </div>
+<!--Pagination links-->    
+    <div class="row">
+        <div class="col s12">
+            <p> Page {{ page_no }} of {{ total_page_no }}</p>
+            <ul class="pagination right-align">
+                <li id="prev-page-upper" {% if page_no|int > 1 %}class="waves-effect" {% else %} class="disabled" {% endif %}>
+                    <a {% if page_no|int > 1 %} href="{{url_for('get_recipes', page_no=page_no|int-1)}}"{% endif %}><i class="material-icons">chevron_left</i>Prev</a>
+                </li>
+                <li id="next-page-upper" {% if page_no|int != total_page_no|int %}class="waves-effect" {% else %}class="disabled" {% endif %}>
+                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Next<i class="material-icons">chevron_right</i></a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    
+<!--Results-->
+    <div class="row">
+        <div class="col s12 results z-depth-2" id="results">
+            {% for recipe in recipes %}
+            <div class="col m6 l3">
+                <div class="card small grow result-card" id="{{ recipe._id }}">
+                    <a href="{{url_for('recipePage', recipe_id=recipe._id)}}">
+                        <div class="card-image">
+                            <img src="{{ recipe.image }}" onerror='this.src="../static/img/not-found.jpg"' alt="{{ recipe.name }}">
+                        </div>
+                    </a>
+                    <div class="card-content">
+                        <p>{{ recipe.name.capitalize() }}</p>
+                    </div>
+                    <div class="card-action">
+                        <a href="{{url_for('recipePage', recipe_id=recipe._id)}}">See this recipe</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+<!--Pagination Links-->    
+    <div class="row">
+        <div class="col s12">
+            <ul class="pagination right-align">
+                <li id="prev-page-lower" {% if page_no|int > 1 %}class="waves-effect" {% else %} class="disabled" {% endif %}>
+                    <a {% if page_no|int > 1 %} href="{{url_for('get_recipes', page_no=page_no|int-1)}}"{% endif %}><i class="material-icons">chevron_left</i>Prev</a>
+                </li>
+                <li id="next-page-lower" {% if page_no|int != total_page_no|int %}class="waves-effect" {% else %}class="disabled" {% endif %}>
+                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Next<i class="material-icons">chevron_right</i></a>
+                </li>
+            </ul>
+            <p> Page {{ page_no }} of {{ total_page_no }}</p>
+        </div>
+    </div>
+
+</main>
+
+{% endblock %}

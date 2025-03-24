@@ -1,0 +1,224 @@
+@import url('https://fonts.googleapis.com/css?family=PT+Serif');
+
+/************************************GENERIC*/
+
+body {
+    background-color: #C7CEDB;
+    font-family: 'PT Serif', serif;
+    display: flex;
+    min-height: 100vh;
+    flex-direction: column;
+
+}
+
+main {
+    flex: 1 0 auto;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.no-display {
+    display: none;
+}
+
+.container {
+    padding: 20px;
+}
+
+/***********************************HEADER/FOOTER*/
+
+nav,
+.page-footer {
+    background-color: #2B193D;
+}
+
+.footer-icons {
+    padding: 10px;
+}
+
+
+.dropdown-content {
+    /*Opens the menu below the nav bar instead of in front*/
+    top: -65px;
+    width: auto!important;
+}
+
+/************************************BUTTONS*/
+
+.btn,
+.btn-large:hover,
+.btn-small:hover,
+.btn-large:focus,
+.btn-small:focus {
+    background-color: #2D2D2A;
+    color: #F7F7FF;
+}
+
+
+
+.btn-large,
+.btn-small,
+.btn:focus,
+.btn:hover {
+    background-color: #3F5E5A;
+    color: #F7F7FF;
+}
+
+.search_btn {
+    margin-top: 20px;
+}
+
+
+/************************************IMAGES*/
+
+.headerimg {
+    margin-right: 5px;
+
+}
+
+.home-image img {
+    max-width: 100%;
+}
+
+.recipeimg {
+    width: 100%;
+    margin-top: 2.3733333333rem;
+}
+
+.card-image {
+    height: 100px;
+}
+
+
+
+/******************************FORMS*/
+
+input::placeholder {
+    color: #2C365E;
+}
+
+.white-background {
+    background-color: #F7F7FF;
+    border-radius: 5px;
+}
+
+.dark-background {
+    background-color: #2D2D2A;
+}
+
+.filter-form {
+    padding: 10px;
+}
+
+.ing-method {
+    margin-bottom: 0px;
+}
+
+.grow {
+    transition: all .2s ease-in-out;
+}
+
+.grow:hover {
+    transform: scale(1.1);
+}
+
+.edit_category .select-wrapper .dropdown-content {
+    max-height: 400px;
+    min-width: 90%;
+}
+
+
+/*The below style prevents the labels sitting directly on top of the input when 
+in an active state.*/
+.input-field>label:not(.label-icon).active {
+    transform: translateY(-18px) scale(0.8);
+    
+}
+
+/*******************************MESSAGES*/
+
+.flashes {
+    background-color: #F1FAEE;
+}
+
+.warning {
+    color: red;
+}
+
+/******************************CATEGORIES*/
+
+.add-or-delete {
+    margin-top: 180px;
+}
+
+
+/*******************************RECIPES*/
+
+.ticked_categories {
+    color: green;
+}
+
+
+.results {
+    background-color: #000000;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 5px;
+}
+
+.result-card {
+    border-radius: 5px;
+}
+
+.collapsible-header {
+    background-color: #3F5E5A;
+    color: #F7F7FF;
+}
+
+/************************************MEDIA QUERIES*/
+
+@media (min-width: 1500px) {
+
+    .recipe-header {
+        padding-bottom: 2.3733333333rem;
+    }
+    .card-image {
+        height: 150px;
+    }
+}
+
+@media (max-width: 1024px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 992px) {
+    .card-image {
+        height: 150px;
+    }
+}
+
+@media (min-width: 601px) {
+    .mobile-only {
+        display: none;
+    }
+}
+
+@media (max-width: 600px) {
+    .hidden-mobile {
+        display: none;
+    }
+    nav .brand-logo {
+        font-size: 1.0rem;
+    }
+
+    .btn-large {
+        font-size: 1.0rem;
+    }
+
+    .footer-icons {
+        padding: 2px;
+    }
+}

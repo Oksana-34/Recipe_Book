@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/css/style.css" type="text/css" />
+    <link rel="icon" type="image/png" href="../../static/img/favicon.ico">
+    <title>Your Online Cookbook</title>
+</head>
+
+<body>
+
+
+    <!--Navbar-->
+    <nav>
+        <div class="nav-wrapper">
+            <a href="{{url_for('index')}}" class="hidden-mobile"><img class= "headerimg" src="/static/img/headerimg.jpg" alt="Your Online Cookbook"></a>
+            <a href="{{url_for('index')}}" class="brand-logo">Your Online Cookbook</a>
+            <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="large material-icons">dehaze</i></a>
+            <ul class="right hide-on-med-and-down">
+                <li><a href="{{url_for('index')}}">Home</a></li>
+                <li>|</li>
+                <li><a href="{{ url_for('get_recipes', page_no=1) }}">Browse</a></li>
+                <li>|</li>
+                {% if user %}
+                <li><a class='dropdown-trigger' href='#' data-target='dropdown1'>Manage</a></li>
+                <li>|</li>
+                <li><a href="{{ url_for('end_session') }}">Log Out</a></li>
+                {% else %}
+                <li><a class="modal-trigger" href="#login-modal">Log In</a></li>
+                {% endif %}
+            </ul>
+            <ul id='dropdown1' class='dropdown-content'>
+                <li><a href="{{url_for('add_recipe')}}">Add a Recipe</a></li>
+                <li><a href="{{url_for('add_category')}}">Categories</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!--Mobile Navbar-->
+    <ul class="sidenav" id="mobile-demo">
+        <li><a href="{{url_for('index')}}">Home</a></li>
+        <li><a href="{{ url_for('get_recipes', page_no=1) }}">Browse</a></li>
+        {% if user %}
+        <li><a href="{{url_for('add_recipe')}}">Add a Recipe</a></li>
+        <li><a href="{{url_for('add_category')}}">Manage Categories</a></li>
+        <li><a class="waves-effect waves-light" href="{{ url_for('end_session') }}">Log Out</a></li>
+        {% else %}
+        <li><a class="waves-effect waves-light modal-trigger" href="#login-modal">Log In</a></li>
+        {% endif %}
+    </ul>
+
+
+    <!--Flashed messages to appear at the top of the viewport, below the nav-->
+    {% with messages = get_flashed_messages() %} {% if messages %}
+    <ul class="flashes center-align">
+        {% for message in messages %}
+        <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %} {% endwith %} {% block content %} {% endblock %}
+
+
+    <!--Footer-->
+    <footer class="page-footer">
+        <div class="container">
+            <div class="row">
+                <div class="footer-copyright col s8">
+                    © 2018, 2020 Heather Olcot
+                </div>
+                <div class="col s4">
+                    <a target="_blank" class="grey-text text-lighten-3 footer-icons" href="https://github.com/hfolcot"><i class="fab fa-github"></i></a>
+                    <a target="_blank" class="grey-text text-lighten-3 footer-icons" href="https://www.linkedin.com/in/heather-olcot-b49981159/"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="row">
+                <p>Website built as part of Code Institute's Full Stack Web Development course</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <!--Modals-->
+
+    <!--Login Modal-->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h4>Log in to add, edit or rate recipes!</h4>
+            <form id="login-form">
+                <div class="input-field">
+                    <input type="text" id="username" name="username" required />
+                    <label for="username">Username: </label>
+                </div>
+                <div class="input-field">
+                    <input type="password" id="password" name="password">
+                    <label for="password">Password: </label>
+                </div>
+                <div class="row">
+                    <div class="col s12">
+                        <button class="waves-effect waves-green btn">Log In</button>
+                        <a href="#newusermodal" class="modal-close waves-effect waves-light modal-trigger">Create an account</a>
+                    </div>
+                </div>
+            </form>
+            <div class="row">
+                <div class="col s10 m4 offset-m4" id="errors-here"></div>
+                <div class="col s2 m2 offset-m5 no-display" id="loader">
+                    <div class="preloader-wrapper small active">
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!--Create User Modal-->
+    <div id="newusermodal" class="modal">
+        <div class="modal-content">
+            <h4>Log in to add, edit or rate recipes!</h4>
+            <form id="create-new-user">
+                <div class="input-field">
+                    <input type="text" id="newusername" name="newusername" required />
+                    <label for="newusername">Username: </label>
+                </div>
+                <div class="input-field">
+                    <input type="password" id="newpassword" name="newpassword">
+                    <label for="newpassword">Password: </label>
+                </div>
+                <div class="input-field">
+                    <input type="password" id="repeatpassword" name="repeatpassword">
+                    <label for="repeatpassword">Re-enter Password: </label>
+                </div>
+                <p class="warning"><strong>WARNING: PASSWORDS ARE STORED IN PLAIN TEXT AND ARE NOT SECURE, PLEASE USE A UNIQUE PASSWORD</strong></p>
+                <button type="submit" class="waves-effect waves-green btn">Create User</button>
+            </form>
+            <div class="row">
+                <div class="col s4 offset-s4" id="new-errors-here"></div>
+            </div>
+            <div class="row">
+                <div class="col s2 offset-s5 no-display" id="new-user-loader">
+                    <div class="preloader-wrapper big active">
+                        <div class="spinner-layer spinner-blue-only">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!--Scripts-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script type="text/javascript" src="/static/js/script.js"></script>
+
+</body>
+
+</html>
