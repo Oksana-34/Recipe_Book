@@ -505,21 +505,25 @@ def something_wrong(error):
 """
 Run the app
 """
-if __name__ == '__main__':   
-    # app.run(host=os.environ.get("IP"),
-    # port=int(os.environ.get("PORT")),
-    # debug=False)
-    try:
-        # Перевірка підключення до MongoDB
-        mongo.db.command('ping')
-        print("MongoDB підключено успішно!")
-
-        # Ініціалізація списків категорій
-        initialize_category_lists()
-
-        # Запуск Flask
+if __name__ == '__main__':
+    # try:
+    #     # Перевірка підключення до MongoDB
+    #     mongo.db.command('ping')
+    #     print("MongoDB підключено успішно!")
+    #
+    #     # Ініціалізація списків категорій
+    #     initialize_category_lists()
+    #
+    #     # Запуск Flask
+    #     app.run(host=os.environ.get("IP"),
+    #             port=int(os.environ.get("PORT")),
+    #             debug=False)
+    # except Exception as e:
+    #     print(f"Помилка підключення до MongoDB: {e}")
+    if __name__ == '__main__':
+        connect_to_mongo()
+        if mongo_ready:
+            initialize_category_lists()
         app.run(host=os.environ.get("IP"),
                 port=int(os.environ.get("PORT")),
                 debug=False)
-    except Exception as e:
-        print(f"Помилка підключення до MongoDB: {e}")
