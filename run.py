@@ -18,7 +18,25 @@ configure_uploads(app, images)
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
 app.config["MONGO_URI"] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
+mongo_ready = False  # сигнал для моніторингу стану
 
+def connect_to_mongo():
+    global mongo, mongo_ready
+    try:
+        mongo.init_app(app)
+        mongo.db.command("ping")  # перевірка зв'язку
+        mongo_ready = True
+        print("MongoDB успішно підключено")
+    except Exception as e:
+        mongo_ready = False
+        print(f"❌ Помилка підключення до MongoDB: {e}")
+
+def get_mongo_db():
+    global mongo_ready
+    if not mongo_ready:
+        print("🔄 Перепідключення до MongoDB...")
+        connect_to_mongo()
+    return mongo.db if mongo_ready else None
 
 """
 Global Variables
@@ -90,21 +108,26 @@ def check_password():
     # else:
     #     message = "Incorrect password"
     #     return message
-    def check_password():
-        try:
-            u = request.args.get('u').lower()
-            p = request.args.get('p')
-            user = mongo.db.users.find_one({"username": u})
-            if not user:
-                return "User not found"
-            if p == user['password']:
-                session['user'] = u
-                return "You were successfully logged in"
-            else:
-                return "Incorrect password"
-        except Exception as e:
-            print(f"Помилка при вході: {e}")
-            return "Database error"
+    db = get_mongo_db()
+    if db is None:
+        return "⚠️ Проблема з базою даних"
+
+    try:
+        u = request.args.get('u').lower()
+        p = request.args.get('p')
+
+        user = db.users.find_one({"username": u})
+        if not user:
+            return "❌ Користувача не знайдено"
+
+        if p == user['password']:
+            session['user'] = u
+            return "✅ Вхід виконано успішно"
+        else:
+            return "❌ Неправильний пароль"
+    except Exception as e:
+        print(f"🚨 Помилка при перевірці паролю: {e}")
+        return "⚠️ Внутрішня помилка сервера"
   
 
 
