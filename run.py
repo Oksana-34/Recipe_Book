@@ -14,8 +14,8 @@ app.config["UPLOADED_IMAGES_DEST"] = "static/img/uploads"
 configure_uploads(app, images)
 
 #config for db access
-app.config["MONGO_DBNAME"] = "RecipeBook_DB"
-app.config["MONGO_URI"] = os.getenv('mongodb+srv://oksanamaksimuk44:MJxg8gP3BSMYR@recipebook.l991w.mongodb.net/?retryWrites=true&w=majority&appName=RecipeBook')
+app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
+app.config["MONGO_URI"] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
 
 
