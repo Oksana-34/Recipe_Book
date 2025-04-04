@@ -17,7 +17,7 @@ The categories are the most heavily nested section of each recipe document.
 """
 
 
-def build_list(cat_type):
+def build_list(mongo,cat_type):
     """
     Build a list of categories for each of the three types of category.
     Called by run.py on startup and used by multiple functions.
