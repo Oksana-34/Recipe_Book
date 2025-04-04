@@ -18,26 +18,21 @@ configure_uploads(app, images)
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
 app.config["MONGO_URI"] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
-mongo_ready = False  # сигнал для моніторингу стану
 
-def connect_to_mongo():
-    global mongo, mongo_ready
+def check_mongo_connection():
     try:
-        mongo.init_app(app)
-        mongo.db.command("ping")  # перевірка зв'язку
-        mongo_ready = True
-        print("MongoDB успішно підключено")
+        mongo.db.command("ping")
+        print("✅ MongoDB підключено")
+        return True
     except Exception as e:
-        mongo_ready = False
-        print(f"❌ Помилка підключення до MongoDB: {e}")
+        print(f"❌ MongoDB не підключено: {e}")
+        return False
 
 def get_mongo_db():
-    global mongo_ready
-    if not mongo_ready:
-        print("🔄 Перепідключення до MongoDB...")
-        connect_to_mongo()
-    return mongo.db if mongo_ready else None
-
+    if check_mongo_connection():
+        return mongo.db
+    else:
+        return None
 """
 Global Variables
 """
@@ -520,8 +515,7 @@ if __name__ == '__main__':
     #             debug=False)
     # except Exception as e:
     #     print(f"Помилка підключення до MongoDB: {e}")
-    connect_to_mongo()
-    if mongo_ready:
+    if check_mongo_connection():
         initialize_category_lists()
     app.run(host=os.environ.get("IP"),
             port=int(os.environ.get("PORT")),
