@@ -76,6 +76,7 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
+    mongo = PyMongo(app)
     u = request.args.get('u').lower()
     p = request.args.get('p')
     user = mongo.db.users.find_one({"username" : u})
