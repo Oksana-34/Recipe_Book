@@ -25,13 +25,28 @@ Global Variables
 """
 
 #Build a list of the three main category headings, needed for multiple functions
-health_concerns_list = data_functions.build_list(mongo,"health_concerns")
-recipe_type_list = data_functions.build_list(mongo,"recipe_type")
-main_ing_list = data_functions.build_list(mongo,"main_ing")
+# health_concerns_list = data_functions.build_list(mongo,"health_concerns")
+# recipe_type_list = data_functions.build_list(mongo,"recipe_type")
+# main_ing_list = data_functions.build_list(mongo,"main_ing")
+
+
+def initialize_category_lists():
+    """Ініціалізує списки категорій після підключення до MongoDB"""
+    global health_concerns_list, recipe_type_list, main_ing_list
+    try:
+        health_concerns_list = data_functions.build_list("health_concerns")
+        recipe_type_list = data_functions.build_list("recipe_type")
+        main_ing_list = data_functions.build_list("main_ing")
+        print("Категорії успішно завантажені")
+    except Exception as e:
+        print(f"Помилка завантаження категорій: {e}")
+
+
 
 """
 Home page
 """
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -453,6 +468,20 @@ def something_wrong(error):
 Run the app
 """
 if __name__ == '__main__':   
-    app.run(host=os.environ.get("IP"),
-    port=int(os.environ.get("PORT")),
-    debug=False)
+    # app.run(host=os.environ.get("IP"),
+    # port=int(os.environ.get("PORT")),
+    # debug=False)
+    try:
+        # Перевірка підключення до MongoDB
+        mongo.db.command('ping')
+        print("MongoDB підключено успішно!")
+
+        # Ініціалізація списків категорій
+        initialize_category_lists()
+
+        # Запуск Flask
+        app.run(host=os.environ.get("IP"),
+                port=int(os.environ.get("PORT")),
+                debug=False)
+    except Exception as e:
+        print(f"Помилка підключення до MongoDB: {e}")
