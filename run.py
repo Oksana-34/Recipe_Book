@@ -103,6 +103,7 @@ def check_password():
     # else:
     #     message = "Incorrect password"
     #     return message
+    mongo = PyMongo(app)
     db = get_mongo_db()
     if db is None:
         return "⚠️ Проблема з базою даних"
