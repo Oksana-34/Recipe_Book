@@ -3,8 +3,8 @@ import os, pymongo, data_functions, json, math
 from flask import Flask, render_template, url_for, request, redirect, session, g, flash
 from flask_pymongo import PyMongo, pymongo
 from bson.objectid import ObjectId
-#from flask_uploads import UploadSet, configure_uploads, IMAGES #Required for image uploads
-from flask_reuploaded import UploadSet, configure_uploads, IMAGES
+from flask_uploads import UploadSet, configure_uploads, IMAGES #Required for image uploads
+#from flask_reuploaded import UploadSet, configure_uploads, IMAGES
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24) #Creates a random string to use as session key
