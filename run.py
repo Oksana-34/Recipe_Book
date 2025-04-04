@@ -17,22 +17,37 @@ configure_uploads(app, images)
 #config for db access
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
 app.config["MONGO_URI"] = os.getenv('MONGO_URI')
-mongo = PyMongo(app)
+# mongo = PyMongo(app)
+mongo = None  # Глобальна змінна PyMongo
 
-def check_mongo_connection():
+def init_mongo():
+    global mongo
     try:
-        mongo.db.command("ping")
-        print("✅ MongoDB підключено")
-        return True
-    except Exception as e:
-        print(f"❌ MongoDB не підключено: {e}")
-        return False
+        mongo_uri = os.environ.get("MONGO_URI")
+        if not mongo_uri:
+            raise Exception("MONGO_URI не встановлено!")
 
-def get_mongo_db():
-    if check_mongo_connection():
-        return mongo.db
-    else:
-        return None
+        app.config["MONGO_URI"] = mongo_uri
+        mongo = PyMongo(app)
+        mongo.db.command("ping")  # тестове підключення
+        print("✅ MongoDB підключено")
+    except Exception as e:
+        mongo = None
+        print(f"❌ Помилка підключення до MongoDB: {e}")
+
+
+def get_mongo():
+    """Гарантує активне з'єднання з MongoDB"""
+    global mongo
+    if not mongo or not mongo.db:
+        print("🔄 Перепідключення до MongoDB...")
+        init_mongo()
+    try:
+        mongo.db.command("ping")  # перевірка
+    except Exception as e:
+        print(f"❌ MongoDB не відповідає, перепідключення: {e}")
+        init_mongo()
+    return mongo
 """
 Global Variables
 """
@@ -103,28 +118,24 @@ def check_password():
     # else:
     #     message = "Incorrect password"
     #     return message
-    mongo = PyMongo(app)
-    db = get_mongo_db()
-    if db is None:
-        return "⚠️ Проблема з базою даних"
+    u = request.args.get('u')
+    p = request.args.get('p')
 
-    try:
-        u = request.args.get('u').lower()
-        p = request.args.get('p')
+    if not u or not p:
+        return "Missing credentials"
 
-        user = db.users.find_one({"username": u})
-        if not user:
-            return "❌ Користувача не знайдено"
+    u = u.lower()
+    db = get_mongo().db
 
-        if p == user['password']:
-            session['user'] = u
-            return "✅ Вхід виконано успішно"
-        else:
-            return "❌ Неправильний пароль"
-    except Exception as e:
-        print(f"🚨 Помилка при перевірці паролю: {e}")
-        return "⚠️ Внутрішня помилка сервера"
-  
+    user = db.users.find_one({"username": u})
+    if not user:
+        return "User not found"
+
+    if p == user.get('password'):
+        session['user'] = u
+        return "You were successfully logged in"
+    else:
+        return "Incorrect password"
 
 
 @app.route('/logout')
@@ -516,8 +527,9 @@ if __name__ == '__main__':
     #             debug=False)
     # except Exception as e:
     #     print(f"Помилка підключення до MongoDB: {e}")
-    if check_mongo_connection():
-        initialize_category_lists()
-    app.run(host=os.environ.get("IP"),
-            port=int(os.environ.get("PORT")),
-            debug=False)
+    try:
+        get_mongo()  # первинне підключення
+        initialize_category_lists()  # твоя ініціалізація категорій
+        app.run(...)
+    except Exception as e:
+        print(f"❌ Критична помилка: {e}")
