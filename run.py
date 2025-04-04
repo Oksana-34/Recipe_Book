@@ -25,9 +25,9 @@ Global Variables
 """
 
 #Build a list of the three main category headings, needed for multiple functions
-# health_concerns_list = data_functions.build_list(mongo,"health_concerns")
-# recipe_type_list = data_functions.build_list(mongo,"recipe_type")
-# main_ing_list = data_functions.build_list(mongo,"main_ing")
+# health_concerns_list = data_functions.build_list("health_concerns")
+# recipe_type_list = data_functions.build_list("recipe_type")
+# main_ing_list = data_functions.build_list("main_ing")
 
 
 def initialize_category_lists():
@@ -77,19 +77,34 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    u = request.args.get('u').lower()
-    p = request.args.get('p')
-    user = mongo.db.users.find_one({"username" : u})
-    if not user:
-        message="User not found"
-        return message  
-    if p == user['password']:
-        session['user'] = u
-        message = "You were successfully logged in"
-        return message
-    else:
-        message = "Incorrect password"
-        return message
+    # u = request.args.get('u').lower()
+    # p = request.args.get('p')
+    # user = mongo.db.users.find_one({"username" : u})
+    # if not user:
+    #     message="User not found"
+    #     return message
+    # if p == user['password']:
+    #     session['user'] = u
+    #     message = "You were successfully logged in"
+    #     return message
+    # else:
+    #     message = "Incorrect password"
+    #     return message
+    def check_password():
+        try:
+            u = request.args.get('u').lower()
+            p = request.args.get('p')
+            user = mongo.db.users.find_one({"username": u})
+            if not user:
+                return "User not found"
+            if p == user['password']:
+                session['user'] = u
+                return "You were successfully logged in"
+            else:
+                return "Incorrect password"
+        except Exception as e:
+            print(f"Помилка при вході: {e}")
+            return "Database error"
   
 
 
