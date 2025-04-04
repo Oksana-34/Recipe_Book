@@ -6,7 +6,7 @@ from flask_pymongo import PyMongo
 
 app = Flask(__name__)
 
-app.config["MONGO_DBNAME"] = "online_cookbook"
+app.config["MONGO_DBNAME"] = "RecipeBook_DB"
 app.config["MONGO_URI"] = os.getenv('MONGO_URI')
 
 mongo = PyMongo(app)
