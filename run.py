@@ -520,10 +520,9 @@ if __name__ == '__main__':
     #             debug=False)
     # except Exception as e:
     #     print(f"Помилка підключення до MongoDB: {e}")
-    if __name__ == '__main__':
-        connect_to_mongo()
-        if mongo_ready:
-            initialize_category_lists()
-        app.run(host=os.environ.get("IP"),
-                port=int(os.environ.get("PORT")),
-                debug=False)
+    connect_to_mongo()
+    if mongo_ready:
+        initialize_category_lists()
+    app.run(host=os.environ.get("IP"),
+            port=int(os.environ.get("PORT")),
+            debug=False)
