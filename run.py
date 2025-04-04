@@ -17,37 +17,8 @@ configure_uploads(app, images)
 #config for db access
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
 app.config["MONGO_URI"] = os.getenv('MONGO_URI')
-# mongo = PyMongo(app)
-mongo = None  # Глобальна змінна PyMongo
+mongo = PyMongo(app)
 
-def init_mongo():
-    global mongo
-    try:
-        mongo_uri = os.environ.get("MONGO_URI")
-        if not mongo_uri:
-            raise Exception("MONGO_URI не встановлено!")
-
-        app.config["MONGO_URI"] = mongo_uri
-        mongo = PyMongo(app)
-        mongo.db.command("ping")  # тестове підключення
-        print("✅ MongoDB підключено")
-    except Exception as e:
-        mongo = None
-        print(f"❌ Помилка підключення до MongoDB: {e}")
-
-
-def get_mongo():
-    """Гарантує активне з'єднання з MongoDB"""
-    global mongo
-    if not mongo or not mongo.db:
-        print("🔄 Перепідключення до MongoDB...")
-        init_mongo()
-    try:
-        mongo.db.command("ping")  # перевірка
-    except Exception as e:
-        print(f"❌ MongoDB не відповідає, перепідключення: {e}")
-        init_mongo()
-    return mongo
 """
 Global Variables
 """
@@ -105,37 +76,19 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    # u = request.args.get('u').lower()
-    # p = request.args.get('p')
-    # user = mongo.db.users.find_one({"username" : u})
-    # if not user:
-    #     message="User not found"
-    #     return message
-    # if p == user['password']:
-    #     session['user'] = u
-    #     message = "You were successfully logged in"
-    #     return message
-    # else:
-    #     message = "Incorrect password"
-    #     return message
-    u = request.args.get('u')
+    u = request.args.get('u').lower()
     p = request.args.get('p')
-
-    if not u or not p:
-        return "Missing credentials"
-
-    u = u.lower()
-    db = get_mongo().db
-
-    user = db.users.find_one({"username": u})
+    user = mongo.db.users.find_one({"username" : u})
     if not user:
-        return "User not found"
-
-    if p == user.get('password'):
+        message="User not found"
+        return message
+    if p == user['password']:
         session['user'] = u
-        return "You were successfully logged in"
+        message = "You were successfully logged in"
+        return message
     else:
-        return "Incorrect password"
+        message = "Incorrect password"
+        return message
 
 
 @app.route('/logout')
@@ -513,23 +466,17 @@ def something_wrong(error):
 Run the app
 """
 if __name__ == '__main__':
-    # try:
-    #     # Перевірка підключення до MongoDB
-    #     mongo.db.command('ping')
-    #     print("MongoDB підключено успішно!")
-    #
-    #     # Ініціалізація списків категорій
-    #     initialize_category_lists()
-    #
-    #     # Запуск Flask
-    #     app.run(host=os.environ.get("IP"),
-    #             port=int(os.environ.get("PORT")),
-    #             debug=False)
-    # except Exception as e:
-    #     print(f"Помилка підключення до MongoDB: {e}")
     try:
-        get_mongo()  # первинне підключення
-        initialize_category_lists()  # твоя ініціалізація категорій
-        app.run(...)
+        # Перевірка підключення до MongoDB
+        mongo.db.command('ping')
+        print("MongoDB підключено успішно!")
+
+        # Ініціалізація списків категорій
+        initialize_category_lists()
+
+        # Запуск Flask
+        app.run(host=os.environ.get("IP"),
+                port=int(os.environ.get("PORT")),
+                debug=False)
     except Exception as e:
-        print(f"❌ Критична помилка: {e}")
+        print(f"Помилка підключення до MongoDB: {e}")
