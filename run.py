@@ -545,6 +545,7 @@ if __name__ == '__main__':
         if not connection_ok:
             print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
             # Перевірка підключення до MongoDB
+            render_template('500.html'), 500
         mongo.db.command('ping')
         print("MongoDB підключено успішно!")
 
