@@ -16,7 +16,7 @@ configure_uploads(app, images)
 
 #config for db access
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
-app.config["MONGO_URI"] = os.getenv('MONGO_URI') + "?retryWrites=true&w=majority&socketTimeoutMS=5000&connectTimeoutMS=30000"
+app.config["MONGO_URI"] = os.getenv('MONGO_URI')
 mongo = PyMongo(app)
 
 """
