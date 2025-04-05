@@ -16,7 +16,7 @@ configure_uploads(app, images)
 
 #config for db access
 app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
-app.config["MONGO_URI"] = os.getenv('MONGO_URI')
+app.config["MONGO_URI"] = os.getenv('MONGO_URI') + "?retryWrites=true&w=majority&socketTimeoutMS=5000&connectTimeoutMS=30000"
 mongo = PyMongo(app)
 
 """
@@ -28,6 +28,27 @@ Global Variables
 # recipe_type_list = data_functions.build_list("recipe_type")
 # main_ing_list = data_functions.build_list("main_ing")
 
+
+@app.before_request
+def check_db_connection():
+    """Перевіряє з'єднання з MongoDB перед кожним запитом і перепідключається при необхідності"""
+    global mongo
+    try:
+        # Спроба виконати простий запит для перевірки з'єднання
+        mongo.db.command('ping')
+    except Exception as e:
+        print(f"З'єднання з MongoDB втрачено: {e}")
+        print("Спроба перепідключення...")
+        try:
+            # Відновлення з'єднання
+            mongo = PyMongo(app)
+            mongo.db.command('ping')
+            print("Успішно перепідключено до MongoDB")
+
+            # Перезавантаження глобальних списків категорій
+            initialize_category_lists()
+        except Exception as reconnect_error:
+            print(f"Помилка перепідключення: {reconnect_error}")
 
 def initialize_category_lists():
     """Ініціалізує списки категорій після підключення до MongoDB"""
@@ -76,20 +97,43 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    mongo = PyMongo(app)
-    u = request.args.get('u').lower()
-    p = request.args.get('p')
-    user = mongo.db.users.find_one({"username" : u})
-    if not user:
-        message="User not found"
-        return message
-    if p == user['password']:
-        session['user'] = u
-        message = "You were successfully logged in"
-        return message
-    else:
-        message = "Incorrect password"
-        return message
+    # u = request.args.get('u').lower()
+    # p = request.args.get('p')
+    # user = mongo.db.users.find_one({"username" : u})
+    # if not user:
+    #     message="User not found"
+    #     return message
+    # if p == user['password']:
+    #     session['user'] = u
+    #     message = "You were successfully logged in"
+    #     return message
+    # else:
+    #     message = "Incorrect password"
+    #     return message
+    try:
+        u = request.args.get('u').lower()
+        p = request.args.get('p')
+
+        # Явна перевірка перед спробою доступу до бази даних
+        try:
+            mongo.db.command('ping')
+        except Exception:
+            return "Помилка з'єднання з базою даних. Будь ласка, спробуйте пізніше."
+
+        user = mongo.db.users.find_one({"username": u})
+        if not user:
+            message = "User not found"
+            return message
+        if p == user['password']:
+            session['user'] = u
+            message = "You were successfully logged in"
+            return message
+        else:
+            message = "Incorrect password"
+            return message
+    except Exception as e:
+        print(f"Помилка входу: {e}")
+        return "Технічна помилка при вході. Будь ласка, спробуйте пізніше."
 
 
 @app.route('/logout')
