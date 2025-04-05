@@ -28,27 +28,37 @@ Global Variables
 # recipe_type_list = data_functions.build_list("recipe_type")
 # main_ing_list = data_functions.build_list("main_ing")
 
-
-@app.before_request
-def check_db_connection():
-    """Перевіряє з'єднання з MongoDB перед кожним запитом і перепідключається при необхідності"""
-    global mongo
-    try:
-        # Спроба виконати простий запит для перевірки з'єднання
-        mongo.db.command('ping')
-    except Exception as e:
-        print(f"З'єднання з MongoDB втрачено: {e}")
-        print("Спроба перепідключення...")
+def safe_db_operation(collection_name, operation, *args, max_retries=3, **kwargs):
+    """
+    Виконує операцію з базою даних з підтримкою повторних спроб
+    :param collection_name: Назва колекції MongoDB
+    :param operation: Назва методу колекції ('find_one', 'update_one', тощо)
+    :param args: Аргументи для операції
+    :param max_retries: Максимальна кількість повторних спроб
+    :param kwargs: Іменовані аргументи для операції
+    :return: Результат операції або None у випадку помилки
+    """
+    retry_count = 0
+    while retry_count < max_retries:
         try:
-            # Відновлення з'єднання
-            mongo = PyMongo(app)
-            mongo.db.command('ping')
-            print("Успішно перепідключено до MongoDB")
-
-            # Перезавантаження глобальних списків категорій
-            initialize_category_lists()
-        except Exception as reconnect_error:
-            print(f"Помилка перепідключення: {reconnect_error}")
+            collection = getattr(mongo.db, collection_name)
+            method = getattr(collection, operation)
+            return method(*args, **kwargs)
+        except Exception as e:
+            retry_count += 1
+            print(f"Помилка бази даних (спроба {retry_count}/{max_retries}): {e}")
+            if retry_count >= max_retries:
+                print("Досягнуто максимальної кількості спроб. Операція невдала.")
+                return None
+            try:
+                # Спроба перепідключення
+                global mongo
+                mongo = PyMongo(app)
+                mongo.db.command('ping')
+                print("Перепідключення успішне, повторна спроба операції...")
+            except Exception as reconnect_error:
+                print(f"Помилка перепідключення: {reconnect_error}")
+    return None
 
 def initialize_category_lists():
     """Ініціалізує списки категорій після підключення до MongoDB"""
@@ -110,31 +120,31 @@ def check_password():
     # else:
     #     message = "Incorrect password"
     #     return message
-    try:
-        u = request.args.get('u').lower()
-        p = request.args.get('p')
-
-        # Явна перевірка перед спробою доступу до бази даних
+    def check_password():
         try:
-            mongo.db.command('ping')
-        except Exception:
-            return "Помилка з'єднання з базою даних. Будь ласка, спробуйте пізніше."
+            u = request.args.get('u').lower()
+            p = request.args.get('p')
 
-        user = mongo.db.users.find_one({"username": u})
-        if not user:
-            message = "User not found"
-            return message
-        if p == user['password']:
-            session['user'] = u
-            message = "You were successfully logged in"
-            return message
-        else:
-            message = "Incorrect password"
-            return message
-    except Exception as e:
-        print(f"Помилка входу: {e}")
-        return "Технічна помилка при вході. Будь ласка, спробуйте пізніше."
+            user = safe_db_operation('users', 'find_one', {"username": u})
+            if user is None:
+                # Перевіряємо, чи це помилка з'єднання або користувача не знайдено
+                try:
+                    mongo.db.command('ping')
+                    message = "User not found"
+                except Exception:
+                    message = "Помилка з'єднання з базою даних. Будь ласка, спробуйте пізніше."
+                return message
 
+            if p == user['password']:
+                session['user'] = u
+                message = "You were successfully logged in"
+                return message
+            else:
+                message = "Incorrect password"
+                return message
+        except Exception as e:
+            print(f"Помилка входу: {e}")
+            return "Технічна помилка при вході. Будь ласка, спробуйте пізніше."
 
 @app.route('/logout')
 def end_session():
