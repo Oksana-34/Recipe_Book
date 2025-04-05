@@ -1,6 +1,5 @@
 import os, data_functions, json, math
-import time
-from datetime import datetime
+
 from flask import Flask, render_template, url_for, request, redirect, session, g, flash
 from flask_pymongo import PyMongo, pymongo
 from bson.objectid import ObjectId
@@ -25,89 +24,77 @@ Global Variables
 """
 
 
-health_concerns_list = []
-recipe_type_list = []
-main_ing_list = []
-# Створення об'єкту для роботи з MongoDB
-try:
-    mongo = PyMongo(app)
-except Exception as e:
-    print(f"Помилка при ініціалізації PyMongo: {e}")
-    mongo = None
-
-
-def get_db_connection():
+def check_mongo_connection():
     """
-    Функція для отримання з'єднання з базою даних з можливістю повторного підключення
+    Перевіряє підключення до MongoDB і виводить детальну інформацію в логи.
+    Цю функцію можна викликати при запуску додатку.
     """
-    global mongo
-    if mongo is None:
-        try:
-            mongo = PyMongo(app)
-            print("MongoDB підключено")
-        except Exception as e:
-            print(f"Помилка підключення до MongoDB: {e}")
-            return None
+    import os
+    import time
+
+    print("=" * 50)
+    print("ПЕРЕВІРКА З'ЄДНАННЯ З MONGODB")
+    print("=" * 50)
+
+    # Перевірка наявності змінної оточення MONGO_URI
+    mongo_uri = os.getenv('MONGO_URI')
+    if not mongo_uri:
+        print("КРИТИЧНА ПОМИЛКА: Змінна оточення MONGO_URI не встановлена!")
+        return False
+
+    # Показуємо частину URI для діагностики без розкриття повних даних
+    masked_uri = f"{mongo_uri[:15]}{'*' * 20}" if len(mongo_uri) > 15 else "***masked***"
+    print(f"MONGO_URI знайдено: {masked_uri}")
 
     try:
-        # Перевірка з'єднання
+        # Пробуємо підключитися і перевірити наявність колекцій
+        print("Спроба підключення до MongoDB...")
+
+        # Перевіряємо саме підключення
         mongo.db.command('ping')
-        return mongo.db
-    except Exception as e:
-        print(f"Помилка з'єднання з MongoDB: {e}")
-        # Спроба перепідключення
+        print("Підключення успішне! MongoDB сервер відповідає.")
+
+        # Перевіряємо наявність бази даних
+        db_name = app.config.get("MONGO_DBNAME", "невідомо")
+        print(f"Назва бази даних: {db_name}")
+
+        # Перевіряємо доступні колекції
         try:
-            mongo = PyMongo(app)
-            mongo.db.command('ping')
-            print("Успішно перепідключено до MongoDB")
-            return mongo.db
-        except Exception as reconnect_error:
-            print(f"Помилка перепідключення: {reconnect_error}")
-            return None
+            collections = mongo.db.list_collection_names()
+            print(f"Доступні колекції: {collections}")
 
+            # Перевіряємо колекцію users
+            if 'users' in collections:
+                try:
+                    users_count = mongo.db.users.count_documents({})
+                    print(f"Колекція 'users' знайдена. Кількість документів: {users_count}")
 
-def safe_db_operation(collection_name, operation, *args, max_retries=3, **kwargs):
-    """
-    Виконує операцію з базою даних з підтримкою повторних спроб
-    """
-    retry_count = 0
-    while retry_count < max_retries:
-        db = get_db_connection()
-        if db is None:
-            retry_count += 1
-            print(f"Неможливо отримати з'єднання з базою даних (спроба {retry_count}/{max_retries})")
-            if retry_count >= max_retries:
-                return None
-            time.sleep(1)  # Чекаємо перед повторною спробою
-            continue
+                    # Опціонально: показати перший документ для перевірки структури
+                    first_user = mongo.db.users.find_one()
+                    if first_user:
+                        # Показуємо структуру документа без розкриття даних
+                        print(f"Структура документу у колекції 'users': {list(first_user.keys())}")
+                except Exception as e:
+                    print(f"Помилка при доступі до колекції 'users': {e}")
+            else:
+                print("УВАГА: Колекція 'users' не знайдена в базі даних!")
 
-        try:
-            collection = getattr(db, collection_name)
-            method = getattr(collection, operation)
-            return method(*args, **kwargs)
         except Exception as e:
-            retry_count += 1
-            print(f"Помилка бази даних (спроба {retry_count}/{max_retries}): {e}")
-            if retry_count >= max_retries:
-                print("Досягнуто максимальної кількості спроб. Операція невдала.")
-                return None
-            time.sleep(1)  # Чекаємо перед повторною спробою
-    return None
+            print(f"Помилка при отриманні списку колекцій: {e}")
 
+        print("=" * 50)
+        return True
 
-@app.before_request
-def before_request():
-    """
-    Перевірка стану користувача та з'єднання з базою даних перед кожним запитом
-    """
-    g.user = None
-    if 'user' in session:
-        g.user = session['user']
+    except Exception as e:
+        print(f"КРИТИЧНА ПОМИЛКА підключення до MongoDB: {e}")
+        print("=" * 50)
+        return False
 
-    # Перевірка списків категорій
-    global health_concerns_list, recipe_type_list, main_ing_list
-    if not (health_concerns_list and recipe_type_list and main_ing_list):
-        initialize_category_lists()
+#Build a list of the three main category headings, needed for multiple functions
+# health_concerns_list = data_functions.build_list("health_concerns")
+# recipe_type_list = data_functions.build_list("recipe_type")
+# main_ing_list = data_functions.build_list("main_ing")
+
 def initialize_category_lists():
     """Ініціалізує списки категорій після підключення до MongoDB"""
     global health_concerns_list, recipe_type_list, main_ing_list
@@ -155,40 +142,19 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    # u = request.args.get('u').lower()
-    # p = request.args.get('p')
-    # user = mongo.db.users.find_one({"username" : u})
-    # if not user:
-    #     message="User not found"
-    #     return message
-    # if p == user['password']:
-    #     session['user'] = u
-    #     message = "You were successfully logged in"
-    #     return message
-    # else:
-    #     message = "Incorrect password"
-    #     return message
-    try:
-        u = request.args.get('u', '').lower()
-        p = request.args.get('p', '')
-
-        user = safe_db_operation('users', 'find_one', {"username": u})
-
-        if user is None:
-            # Перевіряємо, чи це помилка з'єднання або користувача не знайдено
-            db = get_db_connection()
-            if db is None:
-                return "Помилка з'єднання з базою даних. Будь ласка, спробуйте пізніше."
-            return "User not found"
-
-        if p == user['password']:
-            session['user'] = u
-            return "You were successfully logged in"
-        else:
-            return "Incorrect password"
-    except Exception as e:
-        print(f"Помилка входу: {e}")
-        return "Технічна помилка при вході. Будь ласка, спробуйте пізніше."
+    u = request.args.get('u').lower()
+    p = request.args.get('p')
+    user = mongo.db.users.find_one({"username" : u})
+    if not user:
+        message="User not found"
+        return message
+    if p == user['password']:
+        session['user'] = u
+        message = "You were successfully logged in"
+        return message
+    else:
+        message = "Incorrect password"
+        return message
 
 @app.route('/logout')
 def end_session():
@@ -566,6 +532,11 @@ Run the app
 """
 if __name__ == '__main__':
     try:
+        connection_ok = check_mongo_connection()
+
+        if not connection_ok:
+            print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
+
         # Перевірка підключення до MongoDB
         mongo.db.command('ping')
         print("MongoDB підключено успішно!")
