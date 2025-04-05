@@ -533,10 +533,6 @@ Run the app
 """
 if __name__ == '__main__':
     try:
-        connection_ok = check_mongo_connection()
-
-        if not connection_ok:
-            print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
 
         # Перевірка підключення до MongoDB
         mongo.db.command('ping')
@@ -549,5 +545,10 @@ if __name__ == '__main__':
         app.run(host=os.environ.get("IP"),
                 port=int(os.environ.get("PORT")),
                 debug=False)
+        connection_ok = check_mongo_connection()
+
+        if not connection_ok:
+            print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
+
     except Exception as e:
         print(f"Помилка підключення до MongoDB: {e}")
