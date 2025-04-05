@@ -534,12 +534,7 @@ Run the app
 if __name__ == '__main__':
     try:
 
-        # Перевірка підключення до MongoDB
-        mongo.db.command('ping')
-        print("MongoDB підключено успішно!")
 
-        # Ініціалізація списків категорій
-        initialize_category_lists()
 
         # Запуск Flask
         app.run(host=os.environ.get("IP"),
@@ -549,6 +544,11 @@ if __name__ == '__main__':
 
         if not connection_ok:
             print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
+            # Перевірка підключення до MongoDB
+        mongo.db.command('ping')
+        print("MongoDB підключено успішно!")
 
+        # Ініціалізація списків категорій
+        initialize_category_lists()
     except Exception as e:
         print(f"Помилка підключення до MongoDB: {e}")
