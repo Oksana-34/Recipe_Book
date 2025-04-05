@@ -27,17 +27,11 @@ Global Variables
 # health_concerns_list = data_functions.build_list("health_concerns")
 # recipe_type_list = data_functions.build_list("recipe_type")
 # main_ing_list = data_functions.build_list("main_ing")
-
 def safe_db_operation(collection_name, operation, *args, max_retries=3, **kwargs):
     """
     Виконує операцію з базою даних з підтримкою повторних спроб
-    :param collection_name: Назва колекції MongoDB
-    :param operation: Назва методу колекції ('find_one', 'update_one', тощо)
-    :param args: Аргументи для операції
-    :param max_retries: Максимальна кількість повторних спроб
-    :param kwargs: Іменовані аргументи для операції
-    :return: Результат операції або None у випадку помилки
     """
+    global mongo  # Оголошуємо global спочатку
     retry_count = 0
     while retry_count < max_retries:
         try:
@@ -52,14 +46,13 @@ def safe_db_operation(collection_name, operation, *args, max_retries=3, **kwargs
                 return None
             try:
                 # Спроба перепідключення
-                global mongo
                 mongo = PyMongo(app)
                 mongo.db.command('ping')
                 print("Перепідключення успішне, повторна спроба операції...")
             except Exception as reconnect_error:
                 print(f"Помилка перепідключення: {reconnect_error}")
     return None
-
+    return None
 def initialize_category_lists():
     """Ініціалізує списки категорій після підключення до MongoDB"""
     global health_concerns_list, recipe_type_list, main_ing_list
