@@ -75,19 +75,19 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    # u = request.args.get('u').lower()
-    # p = request.args.get('p')
-    # user = mongo.db.users.find_one({"username" : u})
-    # if not user:
-    #     message="User not found"
-    #     return message
-    # if p == user['password']:
-    #     session['user'] = u
-    #     message = "You were successfully logged in"
-    #     return message
-    # else:
-    #     message = "Incorrect password"
-    #     return message
+    u = request.args.get('u').lower()
+    p = request.args.get('p')
+    user = mongo.db.users.find_one({"username" : u})
+    if not user:
+        message="User not found"
+        return message
+    if p == user['password']:
+        session['user'] = u
+        message = "You were successfully logged in"
+        return message
+    else:
+        message = "Incorrect password"
+        return message
 
 @app.route('/logout')
 def end_session():
