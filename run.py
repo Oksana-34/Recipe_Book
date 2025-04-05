@@ -24,12 +24,10 @@ mongo = PyMongo(app)
 Global Variables
 """
 
-#Build a list of the three main category headings, needed for multiple functions
-# health_concerns_list = data_functions.build_list("health_concerns")
-# recipe_type_list = data_functions.build_list("recipe_type")
-# main_ing_list = data_functions.build_list("main_ing")
 
-
+health_concerns_list = []
+recipe_type_list = []
+main_ing_list = []
 # Створення об'єкту для роботи з MongoDB
 try:
     mongo = PyMongo(app)
