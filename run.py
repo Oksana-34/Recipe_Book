@@ -31,7 +31,7 @@ def check_mongo_connection():
     """
     import os
     import time
-
+    mongo1=PyMongo(app)
     print("=" * 50)
     print("ПЕРЕВІРКА З'ЄДНАННЯ З MONGODB")
     print("=" * 50)
@@ -51,7 +51,7 @@ def check_mongo_connection():
         print("Спроба підключення до MongoDB...")
 
         # Перевіряємо саме підключення
-        mongo.db.command('ping')
+        mongo1.db.command('ping')
         print("Підключення успішне! MongoDB сервер відповідає.")
 
         # Перевіряємо наявність бази даних
@@ -60,17 +60,17 @@ def check_mongo_connection():
 
         # Перевіряємо доступні колекції
         try:
-            collections = mongo.db.list_collection_names()
+            collections = mongo1.db.list_collection_names()
             print(f"Доступні колекції: {collections}")
 
             # Перевіряємо колекцію users
             if 'users' in collections:
                 try:
-                    users_count = mongo.db.users.count_documents({})
+                    users_count = mongo1.db.users.count_documents({})
                     print(f"Колекція 'users' знайдена. Кількість документів: {users_count}")
 
                     # Опціонально: показати перший документ для перевірки структури
-                    first_user = mongo.db.users.find_one()
+                    first_user = mongo1.db.users.find_one()
                     if first_user:
                         # Показуємо структуру документа без розкриття даних
                         print(f"Структура документу у колекції 'users': {list(first_user.keys())}")
