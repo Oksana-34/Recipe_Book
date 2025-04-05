@@ -142,7 +142,11 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    print("lox")
+    connection_ok = check_mongo_connection()
+
+    if not connection_ok:
+        print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
+        # Перевірка підключення до MongoDB
     u = request.args.get('u').lower()
     p = request.args.get('p')
     user = mongo.db.users.find_one({"username" : u})
@@ -540,12 +544,7 @@ if __name__ == '__main__':
         app.run(host=os.environ.get("IP"),
                 port=int(os.environ.get("PORT")),
                 debug=False)
-        connection_ok = check_mongo_connection()
 
-        if not connection_ok:
-            print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
-            # Перевірка підключення до MongoDB
-            render_template('500.html'), 500
         mongo.db.command('ping')
         print("MongoDB підключено успішно!")
 
