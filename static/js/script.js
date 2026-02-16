@@ -14,13 +14,13 @@ $(document).ready(function() {
         //html varies slightly on each page.
         if ($('.page-title').text() == 'Add a Recipe') {
             var new_ingredient = `<div class="col s12 input-field ingredient white-background z-depth-2">
-                                <input id="ing" type="text" name="ingredients" placeholder="Next ingredient..." class="validate" required>
+                                <input id="ing" type="text" name="ingredients" placeholder="Наступний інгредієнт..." class="validate" required>
                         </div>`;
         }
         else {
             new_ingredient = `<div class="row">
                                     <div class="col s12 input-field ingredient white-background z-depth-2">
-                                        <input id="ing" type="text" name="ingredients" placeholder="Next ingredient..." class="validate" required>
+                                        <input id="ing" type="text" name="ingredients" placeholder="Наступний інгредієнт..." class="validate" required>
                                     </div>
                                 </div>`;
         }
@@ -66,7 +66,7 @@ $(document).ready(function() {
             zero = "";
         }
         var new_method = `<div class="col s12 input-field method white-background z-depth-2">
-                                <textarea class="materialize-textarea" name="` + zero + step_count + `" placeholder="Enter step ` + step_count + `" required></textarea>
+                                <textarea class="materialize-textarea" name="` + zero + step_count + `" placeholder="Введіть крок ` + step_count + `" required></textarea>
                                 </div>
                             </div>`;
         $(new_method).hide().appendTo("#method_container").fadeIn(300);
@@ -95,7 +95,7 @@ $(document).ready(function() {
             $('#remove_step_from_existing').removeClass('hidden');
         }
         var new_method_to_existing = `<div class="col s12 input-field method white-background z-depth-2">
-                                        <textarea class="materialize-textarea" name="` + step_count_edit + `" placeholder="Enter step ` + step_count_edit + `"></textarea>
+                                        <textarea class="materialize-textarea" name="` + step_count_edit + `" placeholder="Введіть крок ` + step_count_edit + `"></textarea>
                                     </div>`;
 
         $(new_method_to_existing).hide().appendTo('#method_container').fadeIn(300);
@@ -118,14 +118,14 @@ $(document).ready(function() {
     $('#login-form').submit(function(e) {
         e.preventDefault();
         if (!$('input[name="username"]').val()) {
-            $("#errors-here").text("Please enter a username");
+            $("#errors-here").text("Будь ласка, введітьь ім'я користувача");
         }
         else {
             $.get('/login', {
                 u: $('input[name="username"]').val(),
                 p: $('input[name="password"]').val()
             }, function(data) {
-                if (data == "You were successfully logged in") {
+                if (data == "Ви успішно зайшли!") {
                     $("#errors-here").text(data);
                     $('#loader').removeClass('no-display');
                     setTimeout(function() {
@@ -143,7 +143,7 @@ $(document).ready(function() {
     $('#create-new-user').submit(function(e) {
         e.preventDefault();
         if (!$('input[name="newusername"]').val()) {
-            $("#new-errors-here").text("Please enter a username");
+            $("#new-errors-here").text("Будь ласка, введіть ім'я користувача");
         }
         if ($('input[name="newpassword"]').val() != $('input[name="repeatpassword"]').val()) {
             $("#new-errors-here").text("Passwords don't match");
@@ -153,7 +153,7 @@ $(document).ready(function() {
                 u: $('input[name="newusername"]').val(),
                 p: $('input[name="newpassword"]').val()
             }, function(data) {
-                if (data == "User created, you will now be logged in") {
+                if (data == "Користувача створено") {
                     $("#new-errors-here").text(data);
                     $('#new-user-loader').removeClass('no-display');
                     setTimeout(function() {
@@ -170,7 +170,7 @@ $(document).ready(function() {
     $('#delete-recipe').submit(function(e) {
         e.preventDefault();
         if (!$('input[name="user-deleting"]').val()) {
-            $("#delete-errors-here").text("Please enter a username");
+            $("#delete-errors-here").text("Будь ласка, введіть ім'я коистувача");
         }
         var recipe_id = $('input[name="recipe-id"]').val();
         $.get('/delete_recipe', {
@@ -178,7 +178,7 @@ $(document).ready(function() {
             password: $('input[name="password-to-delete"]').val(),
             recipe_id: recipe_id
         }, function(data) {
-            if (data == "Recipe Deleted") {
+            if (data == "Рецепт видалено!") {
                 $("#delete-errors-here").text(data);
                 $('#delete-recipe-loader').removeClass('no-display');
                 setTimeout(function() {

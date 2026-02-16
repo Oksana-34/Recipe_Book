@@ -2,7 +2,7 @@
 <main class="center-align container">
 
 <!--Page Title-->
-    <h2 class="page-title">Welcome to Your Online Cookbook{% if user %}, {{ user.capitalize() }}{% endif %}!</h2>
+    <h2 class="page-title">Ласкаво просимо до Вашої книги рецептів{% if user %}, {{ user.capitalize() }}{% endif %}!</h2>
     
     <div class="row">
 <!--Search form, browse, and add/login buttons-->
@@ -10,7 +10,7 @@
             <div class=" row white-background z-depth-2">
                 <form method="POST">
                     <div class="input-field col s8 xl10">
-                        <input placeholder="Search Recipe Names..." name="search" type="text" class="validate">
+                        <input placeholder="Знайти рецепт..." name="search" type="text" class="validate">
                     </div>
                     <div class="col s2 offset-s1 xl2">
                         <button type="submit" name="action" value="search" class="waves-effect waves-light btn search_btn"><i class="material-icons">search</i></button>
@@ -19,17 +19,17 @@
             </div>
             <div class="divider"></div>
             <div class="section">
-                <a href="{{ url_for('get_recipes', page_no=1) }}" class="waves-effect waves-light btn-large">Browse all Recipes</a>
+                <a href="{{ url_for('get_recipes', page_no=1) }}" class="waves-effect waves-light btn-large">Переглянути усі рецепти</a>
             </div>
             <div class="divider"></div>
             {% if user %}
             <div class="section">
-                <a href="{{url_for('add_recipe')}}" class="waves-effect waves-light btn-large"><i class="material-icons right">add</i>Add your own recipe</a>
+                <a href="{{url_for('add_recipe')}}" class="waves-effect waves-light btn-large"><i class="material-icons right">add</i>Додати власний рецепт</a>
             </div>
             {% else %}
             <div class="section">
-                <p>Login to add or edit recipes!</p>
-                <a href="#login-modal" class="waves-effect waves-light btn-large modal-trigger"><i class="material-icons right">person</i>Login</a>
+                <p>Ввійти щоб додати або редагувати рецепти</p>
+                <a href="#login-modal" class="waves-effect waves-light btn-large modal-trigger"><i class="material-icons right">person</i>Ввійти</a>
             </div>
             {% endif %}
         </div>

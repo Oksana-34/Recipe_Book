@@ -7,7 +7,8 @@ from flask_pymongo import PyMongo
 app = Flask(__name__)
 
 app.config["MONGO_DBNAME"] = "RecipeBook_DB"
-app.config["MONGO_URI"] = os.getenv('MONGO_URI')
+# app.config["MONGO_URI"] = os.getenv('MONGO_URI')
+app.config["MONGO_URI"] = "mongodb+srv://oksanamaksimuk44:Denchik@recipebook.l991w.mongodb.net/?retryWrites=true&w=majority&appName=RecipeBook"
 
 mongo = PyMongo(app)
 
@@ -22,7 +23,8 @@ def build_list(cat_type):
     Build a list of categories for each of the three types of category.
     Called by run.py on startup and used by multiple functions.
     """
-    categories = mongo.db.categories.find()
+    db = mongo.cx["RecipeBook_DB"]
+    categories = db.categories.find()
     cats = []
     for i in categories:
         cats.append(i)

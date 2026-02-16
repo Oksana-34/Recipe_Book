@@ -1,111 +1,83 @@
-import os, data_functions, json, math
 
+import os, data_functions, json, math
 from flask import Flask, render_template, url_for, request, redirect, session, g, flash
+from pymongo.errors import ConnectionFailure, ConfigurationError
 from flask_pymongo import PyMongo, pymongo
 from bson.objectid import ObjectId
-from flask_uploads import UploadSet, configure_uploads, IMAGES #Required for image uploads
-#from flask_reuploaded import UploadSet, configure_uploads, IMAGES
+from flask_uploads import UploadSet, configure_uploads, IMAGES  # Required for image uploads
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24) #Creates a random string to use as session key
+app.secret_key = os.urandom(24)  # Creates a random string to use as session key
 
-#config for image uploads
+# config for image uploads
 images = UploadSet('images', IMAGES)
 app.config["UPLOADED_IMAGES_DEST"] = "static/img/uploads"
 configure_uploads(app, images)
 
-#config for db access
-app.config["MONGO_DBNAME"] = "RecipeBook_DB" 
-app.config["MONGO_URI"] = os.getenv('MONGO_URI')
-mongo = PyMongo(app)
+# config for db access
+app.config["MONGO_DBNAME"] = "RecipeBook_DB"
+app.config[
+    "MONGO_URI"] = "mongodb+srv://oksanamaksimuk44:Denchik@recipebook.l991w.mongodb.net/?retryWrites=true&w=majority&appName=RecipeBook"
 
-"""
-Global Variables
-"""
+# Глобальні змінні для зберігання списків категорій
+health_concerns_list = []
+recipe_type_list = []
+main_ing_list = []
+
+# Глобальна змінна для MongoDB
+mongo = PyMongo(app)
+db_connected = False
+db = mongo.cx["RecipeBook_DB"]
+
+
+def initialize_mongo():
+    """Ініціалізує підключення до MongoDB"""
+    global db_connected
+    try:
+        # mongo = PyMongo(app)
+        # Спроба виконати ping для перевірки підключення
+        mongo.cx.admin.command('ping')
+        db_connected = True
+        print("MongoDB підключено успішно! initialize")
+        return True
+    except Exception as e:
+        db_connected = False
+        print(f"Помилка підключення до MongoDB: initialize {e}")
+        return False
 
 
 def check_mongo_connection():
-    """
-    Перевіряє підключення до MongoDB і виводить детальну інформацію в логи.
-    Цю функцію можна викликати при запуску додатку.
-    """
-    import os
-    import time
-    mongo1=PyMongo(app)
-    print("=" * 50)
-    print("ПЕРЕВІРКА З'ЄДНАННЯ З MONGODB")
-    print("=" * 50)
-
-    # Перевірка наявності змінної оточення MONGO_URI
-    mongo_uri = os.getenv('MONGO_URI')
-    if not mongo_uri:
-        print("КРИТИЧНА ПОМИЛКА: Змінна оточення MONGO_URI не встановлена!")
-        return False
-
-    # Показуємо частину URI для діагностики без розкриття повних даних
-    masked_uri = f"{mongo_uri[:15]}{'*' * 20}" if len(mongo_uri) > 15 else "***masked***"
-    print(f"MONGO_URI знайдено: {masked_uri}")
+    """Перевіряє підключення до MongoDB і намагається перепідключитися при необхідності"""
+    global mongo, db_connected
+    if not mongo or not db_connected:
+        return initialize_mongo()
 
     try:
-        # Пробуємо підключитися і перевірити наявність колекцій
-        print("Спроба підключення до MongoDB...")
-
-        # Перевіряємо саме підключення
-        mongo1.db.command('ping')
-        print("Підключення успішне! MongoDB сервер відповідає.")
-
-        # Перевіряємо наявність бази даних
-        db_name = app.config.get("MONGO_DBNAME", "невідомо")
-        print(f"Назва бази даних: {db_name}")
-
-        # Перевіряємо доступні колекції
-        try:
-            collections = mongo1.db.list_collection_names()
-            print(f"Доступні колекції: {collections}")
-
-            # Перевіряємо колекцію users
-            if 'users' in collections:
-                try:
-                    users_count = mongo1.db.users.count_documents({})
-                    print(f"Колекція 'users' знайдена. Кількість документів: {users_count}")
-
-                    # Опціонально: показати перший документ для перевірки структури
-                    first_user = mongo1.db.users.find_one()
-                    if first_user:
-                        # Показуємо структуру документа без розкриття даних
-                        print(f"Структура документу у колекції 'users': {list(first_user.keys())}")
-                except Exception as e:
-                    print(f"Помилка при доступі до колекції 'users': {e}")
-            else:
-                print("УВАГА: Колекція 'users' не знайдена в базі даних!")
-
-        except Exception as e:
-            print(f"Помилка при отриманні списку колекцій: {e}")
-
-        print("=" * 50)
+        # Перевірка підключення
+        mongo.cx.admin.command('ping')
         return True
-
     except Exception as e:
-        print(f"КРИТИЧНА ПОМИЛКА підключення до MongoDB: {e}")
-        print("=" * 50)
-        return False
+        print(f"Перепідключення до MongoDB: {e}")
+        return initialize_mongo()
 
-#Build a list of the three main category headings, needed for multiple functions
-# health_concerns_list = data_functions.build_list("health_concerns")
-# recipe_type_list = data_functions.build_list("recipe_type")
-# main_ing_list = data_functions.build_list("main_ing")
 
 def initialize_category_lists():
     """Ініціалізує списки категорій після підключення до MongoDB"""
     global health_concerns_list, recipe_type_list, main_ing_list
+
+    if not check_mongo_connection():
+        print("Неможливо завантажити категорії: немає підключення до MongoDB")
+        return False
+
     try:
         health_concerns_list = data_functions.build_list("health_concerns")
         recipe_type_list = data_functions.build_list("recipe_type")
         main_ing_list = data_functions.build_list("main_ing")
         print("Категорії успішно завантажені")
+        return True
     except Exception as e:
         print(f"Помилка завантаження категорій: {e}")
-
+        return False
 
 
 """
@@ -118,23 +90,27 @@ def index():
     """
     Main welcome page with option to search, add or browse recipes.
     """
+    check_mongo_connection()
+
     if request.method == "POST":
         if request.form['action'] == 'search':
             search_term = request.form['search']
             if search_term == "":
-                flash("Please enter a value to search")
+                flash("Будь ласка, введіть значення пошуку: ")
                 return redirect(url_for('index', user=g.user))
             for i in search_term:
                 if not i.isalnum():
-                    search_term= search_term.replace(i, "-")
-            return redirect(url_for('search', 
-                                     search_term=search_term,
-                                     page_no=1))
+                    search_term = search_term.replace(i, "-")
+            return redirect(url_for('search',
+                                    search_term=search_term,
+                                    page_no=1))
     return render_template("index.html", user=g.user)
-    
+
+
 """
 Login/User sessions
 """
+
 
 @app.route('/login', methods=['GET'])
 def check_password():
@@ -142,24 +118,36 @@ def check_password():
     Check that the username is found in the database and the password is valid
     Called by script.js on click of login button in login modal
     """
-    connection_ok = check_mongo_connection()
+    # Викликаємо функцію перед використанням mongo
+    initialize_mongo()
+    ping_result = mongo.cx.admin.command('ping')
 
-    if not connection_ok:
-        print("УВАГА: Проблеми з підключенням до MongoDB! Спроба запуску програми...")
-        # Перевірка підключення до MongoDB
+    if ping_result.get('ok') == 1.0:
+        print("Ping OK")
+    else:
+        print("Ping Failed")
+    if not check_mongo_connection():
+        return "Database connection error"
+
     u = request.args.get('u').lower()
     p = request.args.get('p')
-    user = mongo.db.users.find_one({"username" : u})
-    if not user:
-        message="User not found"
-        return message
-    if p == user['password']:
-        session['user'] = u
-        message = "You were successfully logged in"
-        return message
-    else:
-        message = "Incorrect password"
-        return message
+
+    try:
+        user = db.users.find_one({"username": u})
+        if not user:
+            message = "Користувача не знайдено"
+            return message
+        if p == user['password']:
+            session['user'] = u
+            message = "Ви успішно увійшли!"
+            return message
+        else:
+            message = "Неправильний пароль!"
+            return message
+    except Exception as e:
+        print(f"Помилка входу: {e}")
+        return f"Database error: {str(e)}"
+
 
 @app.route('/logout')
 def end_session():
@@ -167,40 +155,38 @@ def end_session():
     Log the user out of the session and return them to the home page
     """
     session.pop('user', None)
-    flash("You were successfully logged out")
+    flash("Ви успішно вийшли!")
     return redirect(url_for('index'))
-    
+
 @app.route('/create_user', methods=['GET'])
 def create_user():
-    """
-    Creates a new user in the database if that user does not already exist
-    Called by script.js on click of create account button in create user modal
-    """
+
+
     u = request.args.get('u').lower()
     p = request.args.get('p')
     session.pop('user', None) #ensures there is not currently an active session
     #Check that the username is not already taken
     for letter in u:
         if not letter.isalnum():
-            message = "Invalid characters in username. Please use alphanumeric only."
+            message = "Неправильні символи в ім'ї користувача! Будь ласка, використовуйте лише алфавітно-цифрові символи."
             return message
     for letter in p:
         if not letter.isalnum():
-            message = "Invalid characters in password. Please use alphanumeric only."
+            message = "Неправильні символи в ім'ї користувача! Будь ласка, використовуйте лише алфавітно-цифрові символи."
             return message
-    user = mongo.db.users.find_one({"username" : u})
+    user = db.users.find_one({"username" : u})
     if user:
-        message = "That username has already been taken"
+        message = "Таке ім'я користувача вже існує!"
         return message
     else:
-        mongo.db.users.insert_one({"username" : u,
-                                   "password" : p, 
+        db.users.insert_one({"username" : u,
+                                   "password" : p,
                                    "rated_recipes" : []})
         session['user'] = u
-        message = "User created, you will now be logged in"
+        message = "Користувача створено!"
         return message
-    
-    
+
+
 @app.before_request
 def before_request():
     """
@@ -209,7 +195,9 @@ def before_request():
     g.user = None
     if 'user' in session:
         g.user = session['user']
-    
+
+    # Також можемо тут перевірити підключення до MongoDB
+    check_mongo_connection()
 """
 Recipe Read Methods
 """
@@ -219,12 +207,14 @@ def get_recipes(page_no):
     """
     Reset browse.html page to show all recipes in paginated list
     """
+
+
     selected_recipe_type = None
     selected_main_ing = None
     selected_health_concerns = None
-    #this is the number of results to skip when searching in mongodb to find 
+    #this is the number of results to skip when searching in mongodb to find
     #the next page's worth of results:
-    skip_count = (int(page_no) - 1) * 8 
+    skip_count = (int(page_no) - 1) * 8
     if request.method == 'POST':
         #User has selected to filter by category
         form = request.form.to_dict()
@@ -236,32 +226,32 @@ def get_recipes(page_no):
             selected_health_concerns = form['health_concerns']
         if len(form) == 0:
             #catch for if user clicks update button without selecting a filtering option
-            flash("Please choose a category to filter")
+            flash("Будь ласка, оберіть категорію для фільтрації")
             return redirect(url_for('get_recipes', page_no=1))
         query = data_functions.build_query_for_filtering(form)
         #To give to the count_results function to count the total number of results:
-        non_paginated_results = mongo.db.recipes.find(query).sort([("rating", pymongo.DESCENDING), 
-                                                                 ("_id", pymongo.ASCENDING)]) 
+        non_paginated_results = db.recipes.find(query).sort([("rating", pymongo.DESCENDING),
+                                                                 ("_id", pymongo.ASCENDING)])
         #Count the total number of results:
         results_count = data_functions.count_results(non_paginated_results)
         #To return only 8 results to display on the given page number:
-        paginated_results = mongo.db.recipes.find(query).sort([("rating", pymongo.DESCENDING), 
-                                                               ("_id", pymongo.ASCENDING)]).skip(skip_count).limit(8) 
+        paginated_results = db.recipes.find(query).sort([("rating", pymongo.DESCENDING),
+                                                               ("_id", pymongo.ASCENDING)]).skip(skip_count).limit(8)
     else:
         #Show all results (paginated)
-        results = mongo.db.recipes.find()
+        results = db.recipes.find()
         results_count = data_functions.count_results(results)
-        paginated_results = mongo.db.recipes.find().sort([("ratings.rating", pymongo.DESCENDING), 
+        paginated_results = db.recipes.find().sort([("ratings.rating", pymongo.DESCENDING),
                                                         ("_id", pymongo.ASCENDING)]).skip(skip_count).limit(8)
     #calculate how many pages of results will be required:
     total_page_no=int(math.ceil(results_count/8.0))
     #For the html page to show 0 of 0 pages if no results:
     if results_count == 0:
         page_no = 0
-    return render_template("browse.html", 
-                            recipes=paginated_results, 
-                            health_concerns=health_concerns_list, 
-                            main_ing=main_ing_list, 
+    return render_template("browse.html",
+                            recipes=paginated_results,
+                            health_concerns=health_concerns_list,
+                            main_ing=main_ing_list,
                             recipe_type=recipe_type_list,
                             results_count = results_count,
                             user=g.user,
@@ -273,57 +263,61 @@ def get_recipes(page_no):
                             )
 
 
-    
+
 @app.route("/search/<search_term>/<page_no>", methods=["GET", "POST"])
 def search(search_term, page_no):
     """
-    Runs the search query based on user input and returns a list of paginated 
+    Runs the search query based on user input and returns a list of paginated
     results.
     """
-    mongo.db.recipes.create_index([('name', 'text')])
+
+
+    db.recipes.create_index([('name', 'text')])
     query = ( { "$text": { "$search": search_term } } )
     #return all results and then count how many there are
-    results = mongo.db.recipes.find(query)
+    results = db.recipes.find(query)
     results_count = data_functions.count_results(results)
-    #Split the results into blocks of 8 depending on which page number has been 
+    #Split the results into blocks of 8 depending on which page number has been
     #requested.
-    #Skip_count is the number of results to skip when searching in mongodb to 
+    #Skip_count is the number of results to skip when searching in mongodb to
     #find the next page's worth of results
     skip_count = (int(page_no) - 1) * 8
-    paginated_results = mongo.db.recipes.find(query).sort([("ratings.rating", pymongo.DESCENDING), 
+    paginated_results = db.recipes.find(query).sort([("ratings.rating", pymongo.DESCENDING),
                                                            ("_id", pymongo.ASCENDING)]).skip(skip_count).limit(8)
     total_page_no=int(math.ceil(results_count/8.0))
     if results_count == 0:
         page_no = 0
     return render_template("results.html",
                             search_term=search_term,
-                            recipes=paginated_results, 
-                            health_concerns=health_concerns_list, 
-                            main_ing=main_ing_list, 
+                            recipes=paginated_results,
+                            health_concerns=health_concerns_list,
+                            main_ing=main_ing_list,
                             recipe_type=recipe_type_list,
                             results_count = results_count,
                             user=g.user,
                             page_no=page_no,
                             total_page_no=total_page_no
                             )
-                            
-    
+
+
 @app.route("/recipe/<recipe_id>")
 def recipePage(recipe_id):
     """
     Supplies the data to display on recipe.html
     """
-    current_recipe =  mongo.db.recipes.find_one({"_id": ObjectId(recipe_id)})
+
+
+    current_recipe =  db.recipes.find_one({"_id": ObjectId(recipe_id)})
     rating = int(current_recipe['ratings']['rating'])
     serving = current_recipe["serves"]
     method = data_functions.build_method_to_display(current_recipe)
-    user = mongo.db.users.find({'username' : g.user})
+    user = db.users.find({'username' : g.user})
     user_recipes_rated = []
     for u in user:
         user_recipes_rated = u['rated_recipes']
-    return render_template("recipe.html", 
-                            recipe=current_recipe, 
-                            rating=rating, 
+    return render_template("recipe.html",
+                            recipe=current_recipe,
+                            rating=rating,
                             method=method,
                             serves=serving,
                             user=g.user,
@@ -337,36 +331,43 @@ Recipe Create/Update/Delete Methods
 @app.route("/add_recipe")
 def add_recipe():
     """
-    Supplies the data for add_recipe.html, will only return data if user is 
+    Supplies the data for add_recipe.html, will only return data if user is
     logged in
     """
-    if g.user: 
+    if g.user:
         health_concerns_list = data_functions.build_list("health_concerns")
         recipe_type_list = data_functions.build_list("recipe_type")
         main_ing_list = data_functions.build_list("main_ing")
-        return render_template("add_recipe.html", 
-                                health_concerns=health_concerns_list, 
+        return render_template("add_recipe.html",
+                                health_concerns=health_concerns_list,
                                 recipe_type=recipe_type_list,
-                                main_ing=main_ing_list, 
+                                main_ing=main_ing_list,
                                 user=g.user)
     else:
-        flash("You must be logged in to add a recipe")
+        flash("Ви повинні ввійти, щоб додати рецепт")
         return redirect(url_for('index'))
-    
+
 @app.route("/insert_recipe", methods=["POST"])
 def insert_recipe():
     """
     Insert a new recipe into the database
     """
+
+
     if 'image' in request.files:
-        #uploads image to static/img/uploads and creates the filepath to store 
+        #uploads image to static/img/uploads and creates the filepath to store
         #in the database
+        image_file = request.files['image']
+        print("--- Debug Upload ---")
+        print("Filename:", image_file.filename)
+        print("MIME Type (from browser):", image_file.mimetype)
+        print("--- End Debug Upload ---")
         filename = images.save(request.files['image'])
         filepath = "../static/img/uploads/" + filename
     else:
         filepath = "../static/img/not-found.jpg"
     data = data_functions.build_dict(request.form, filepath)
-    newid = mongo.db.recipes.insert_one(data)
+    newid = db.recipes.insert_one(data)
     return redirect(url_for('recipePage', recipe_id = newid.inserted_id))
 
 
@@ -376,150 +377,163 @@ def rate_recipe(recipe_id):
     Calculates the new rating based on user input.
     Function not accessible to users unless logged in.
     """
-    mongo.db.recipes.update_one({"_id": ObjectId(recipe_id)}, 
-                                { '$inc': 
-                                    {'ratings.score': int(request.form['rating']), 
+
+
+    db.recipes.update_one({"_id": ObjectId(recipe_id)},
+                                { '$inc':
+                                    {'ratings.score': int(request.form['rating']),
                                     'ratings.number_times_rated': 1 } })
-    mongo.db.users.update_one({"username": g.user}, 
-                                    {'$addToSet' : 
+    db.users.update_one({"username": g.user},
+                                    {'$addToSet' :
                                         {"rated_recipes" : recipe_id}})
-    current_recipe =  mongo.db.recipes.find_one({"_id": ObjectId(recipe_id)})
+    current_recipe =  db.recipes.find_one({"_id": ObjectId(recipe_id)})
     rating = int(current_recipe["ratings"]['score']) / int(current_recipe["ratings"]['number_times_rated'])
-    mongo.db.recipes.update_one({"_id": ObjectId(recipe_id)}, 
+    db.recipes.update_one({"_id": ObjectId(recipe_id)},
                                 { '$set': {'ratings.rating': rating}})
     return redirect(url_for('recipePage', recipe_id = recipe_id))
 
-    
+
 @app.route("/edit_recipe/<recipe_id>")
 def edit_recipe(recipe_id):
     """
     Supplies the data to display on edit_recipe.html
     Function not accessible to users unless logged in.
     """
+
+
     if g.user:
-        current_recipe =  mongo.db.recipes.find_one({"_id": ObjectId(recipe_id)})
+        current_recipe =  db.recipes.find_one({"_id": ObjectId(recipe_id)})
         health_concerns_list = data_functions.build_list("health_concerns")
         recipe_type_list = data_functions.build_list("recipe_type")
         main_ing_list = data_functions.build_list("main_ing")
         method = data_functions.build_method_to_display(current_recipe)
-        return render_template("edit_recipe.html", 
-                                recipe=current_recipe, 
-                                health_concerns=health_concerns_list, 
-                                recipe_type=recipe_type_list, 
-                                main_ing=main_ing_list, 
+        return render_template("edit_recipe.html",
+                                recipe=current_recipe,
+                                health_concerns=health_concerns_list,
+                                recipe_type=recipe_type_list,
+                                main_ing=main_ing_list,
                                 method=method,
                                 user=g.user)
     else:
-        flash("You must be logged in to edit recipes")
+        flash("Ви повинні ввійти, щоб редагувати рецепт!")
         return redirect(url_for('index'))
-    
+
 @app.route("/update_recipe/<recipe_id>", methods=["POST"])
 def update_recipe(recipe_id):
     """
     Updates the edited recipe in the database
     """
+
+
     if 'image' in request.files:
-        #uploads image to static/img/uploads and creates the filepath to store 
+        #uploads image to static/img/uploads and creates the filepath to store
         #in the database
+
         filename = images.save(request.files['image'])
+
         filepath = "../static/img/uploads/" + filename
     elif 'filepath' in request.form:
         filepath = request.form['filepath']
     else:
         filepath = "../static/img/not-found.jpg"
-    recipes = mongo.db.recipes
+    recipes = db.recipes
     data = data_functions.build_dict(request.form, filepath)
     recipes.update( {'_id': ObjectId(recipe_id)}, data)
     return redirect(url_for('recipePage', recipe_id=recipe_id))
-    
+
 @app.route('/delete_recipe', methods=['GET'])
 def delete_recipe():
     """
-    Called by the #delete-recipe button on recipe.html(#delete-recipe-modal), 
+    Called by the #delete-recipe button on recipe.html(#delete-recipe-modal),
     which runs a get request through script.js.
-    The user can only do this if they are logged in and they must confirm their 
+    The user can only do this if they are logged in and they must confirm their
     credentials.
-    Once a password has been entered and validated, the recipe document in the 
-    db will be updated with a 'deleted : on' and the name of the user who has 
+    Once a password has been entered and validated, the recipe document in the
+    db will be updated with a 'deleted : on' and the name of the user who has
     authorised the delete.
     """
+
     user = request.args.get('user')
     password = request.args.get('password')
     recipe_id = request.args.get('recipe_id')
-    recipes = mongo.db.recipes
-    deleted_recipes = mongo.db.deleted
-    username = mongo.db.users.find_one({"username" : user})
-    #check user exists
+    recipes = db.recipes
+    deleted_recipes = db.deleted
+    username = db.users.find_one({"username": user})
+    # check user exists
     if not username:
-        message="User not found"
+        message = "Користувача не знайдено!"
         return message
-    #check password and delete recipe if correct
+    # check password and delete recipe if correct
     if password == username['password']:
-        document =  recipes.find_one({'_id' : ObjectId(recipe_id)})
-        #Copy the recipe to the deleted collection:
+        document = recipes.find_one({'_id': ObjectId(recipe_id)})
+        # Copy the recipe to the deleted collection:
         deleted_recipes.insert_one(document)
-        #add details of who has deleted the recipe:
-        deleted_recipes.update({'_id': ObjectId(recipe_id)}, 
-                                                {"$set" :
-                                                    {"deleted" : "on", 
-                                                    "deleted_by" : user}})
-        #remove the recipe from the active recipes collection:    
-        recipes.remove({'_id': ObjectId(recipe_id)})
+        # add details of who has deleted the recipe:
+        deleted_recipes.update_one({'_id': ObjectId(recipe_id)},
+                                   {"$set": {
+                                       "deleted": "on",
+                                       "deleted_by": user
+                                   }})
+        # remove the recipe from the active recipes collection:
+        recipes.delete_one({'_id': ObjectId(recipe_id)})
         message = "Recipe Deleted"
         return message
     else:
-        message = "Incorrect password"
+        message = "Неправильний пароль!"
         return message
 
 
 """
 Category adding
 """
-    
+
 @app.route("/add_category")
 def add_category():
     """
     Supplies the data for add_category.html
     """
+
     if g.user:
         return render_template("add_category.html",
-                            health_concerns=health_concerns_list, 
-                            recipe_type=recipe_type_list, 
-                            main_ing=main_ing_list,  
+                            health_concerns=health_concerns_list,
+                            recipe_type=recipe_type_list,
+                            main_ing=main_ing_list,
                             user=g.user)
     else:
-        flash("You must be logged in to manage categories")
+        flash("Ви повинні ввійти, щоб керувати категоріями!")
         return redirect(url_for('index'))
-    
+
 @app.route("/insert_category", methods=["POST"])
 def insert_category():
     """
     Inserts a new category into the database
     """
+
+
     if request.form['cat_type'] == '':
-        flash("Please select a category type")
+        flash("Будь ласка, оберіть тип категорії!")
         return redirect(url_for('add_category'))
     else:
         data = {"cat_name" : request.form['cat_name'].lower(), "cat_type" : request.form['cat_type'].lower()}
-        mongo.db.categories.insert_one(data)
-        flash("Category Added")
+        db.categories.insert_one(data)
+        flash("Категорія додана!")
         return redirect(url_for('index'))
-    
+
 @app.route("/delete_category", methods=["POST"])
 def delete_category():
     """
     Removes a category from the database
     """
     if len(request.form) == 0:
-        flash("Please select a category")
+        flash("Будь ласка, оберіть категорію!")
         return redirect(url_for('add_category'))
     else:
         for k, v in request.form.items():
-            mongo.db.categories.delete_one({"cat_name" : v})
-        flash("Category deleted")
+            db.categories.delete_one({"cat_name" : v})
+        flash("Категорію видалено!")
         return redirect(url_for('index'))
-    
-    
+
+
 """
 Error handling
 """
@@ -527,7 +541,7 @@ Error handling
 @app.errorhandler(404)
 def page_not_found(error):
     return render_template('404.html'), 404
-    
+
 @app.errorhandler(500)
 def something_wrong(error):
     return render_template('500.html'), 500
@@ -536,19 +550,14 @@ def something_wrong(error):
 Run the app
 """
 if __name__ == '__main__':
-    try:
+    # Спочатку ініціалізуємо з'єднання з MongoDB
+    if initialize_mongo():
 
-
-
-        # Запуск Flask
-        app.run(host=os.environ.get("IP"),
-                port=int(os.environ.get("PORT")),
-                debug=False)
-
-        mongo.db.command('ping')
-        print("MongoDB підключено успішно!")
-
-        # Ініціалізація списків категорій
+        # Після успішного підключення ініціалізуємо списки категорій
         initialize_category_lists()
-    except Exception as e:
-        print(f"Помилка підключення до MongoDB: {e}")
+        # Запуск Flask
+        app.run(host="127.0.0.1",
+                port=5050,
+                debug=True)
+    else:
+        print("Неможливо запустити додаток: відсутнє підключення до MongoDB")

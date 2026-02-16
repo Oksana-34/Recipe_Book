@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
     <link rel="stylesheet" href="/static/css/style.css" type="text/css" />
     <link rel="icon" type="image/png" href="../../static/img/favicon.ico">
-    <title>Your Online Cookbook</title>
+    <title>Твоя книга рецептів</title>
 </head>
 
 <body>
@@ -19,39 +19,39 @@
     <!--Navbar-->
     <nav>
         <div class="nav-wrapper">
-            <a href="{{url_for('index')}}" class="hidden-mobile"><img class= "headerimg" src="/static/img/headerimg.jpg" alt="Your Online Cookbook"></a>
-            <a href="{{url_for('index')}}" class="brand-logo">Your Online Cookbook</a>
+            <a href="{{url_for('index')}}" class="hidden-mobile"><img class= "headerimg" src="/static/img/headerimg.jpg" alt="Твоя онлайн-книга рецептів!"></a>
+            <a href="{{url_for('index')}}" class="brand-logo"><i>Твоя книга рецептів</i></a>
             <a href="#" data-target="mobile-demo" class="sidenav-trigger"><i class="large material-icons">dehaze</i></a>
             <ul class="right hide-on-med-and-down">
-                <li><a href="{{url_for('index')}}">Home</a></li>
+                <li><a href="{{url_for('index')}}">На головну</a></li>
                 <li>|</li>
-                <li><a href="{{ url_for('get_recipes', page_no=1) }}">Browse</a></li>
+                <li><a href="{{ url_for('get_recipes', page_no=1) }}">Переглянути</a></li>
                 <li>|</li>
                 {% if user %}
-                <li><a class='dropdown-trigger' href='#' data-target='dropdown1'>Manage</a></li>
+                <li><a class='dropdown-trigger' href='#' data-target='dropdown1'>Керувати</a></li>
                 <li>|</li>
-                <li><a href="{{ url_for('end_session') }}">Log Out</a></li>
+                <li><a href="{{ url_for('end_session') }}">Вийти</a></li>
                 {% else %}
-                <li><a class="modal-trigger" href="#login-modal">Log In</a></li>
+                <li><a class="modal-trigger" href="#login-modal">Увійти</a></li>
                 {% endif %}
             </ul>
             <ul id='dropdown1' class='dropdown-content'>
-                <li><a href="{{url_for('add_recipe')}}">Add a Recipe</a></li>
-                <li><a href="{{url_for('add_category')}}">Categories</a></li>
+                <li><a href="{{url_for('add_recipe')}}">Додати рецепт</a></li>
+                <li><a href="{{url_for('add_category')}}">Категорії</a></li>
             </ul>
         </div>
     </nav>
 
     <!--Mobile Navbar-->
     <ul class="sidenav" id="mobile-demo">
-        <li><a href="{{url_for('index')}}">Home</a></li>
-        <li><a href="{{ url_for('get_recipes', page_no=1) }}">Browse</a></li>
+        <li><a href="{{url_for('index')}}">На головну</a></li>
+        <li><a href="{{ url_for('get_recipes', page_no=1) }}">Переглянути</a></li>
         {% if user %}
-        <li><a href="{{url_for('add_recipe')}}">Add a Recipe</a></li>
-        <li><a href="{{url_for('add_category')}}">Manage Categories</a></li>
-        <li><a class="waves-effect waves-light" href="{{ url_for('end_session') }}">Log Out</a></li>
+        <li><a href="{{url_for('add_recipe')}}">Додати рецепт</a></li>
+        <li><a href="{{url_for('add_category')}}">Керувати категоріями</a></li>
+        <li><a class="waves-effect waves-light" href="{{ url_for('end_session') }}">Вийти</a></li>
         {% else %}
-        <li><a class="waves-effect waves-light modal-trigger" href="#login-modal">Log In</a></li>
+        <li><a class="waves-effect waves-light modal-trigger" href="#login-modal">Увійти</a></li>
         {% endif %}
     </ul>
 
@@ -71,15 +71,14 @@
         <div class="container">
             <div class="row">
                 <div class="footer-copyright col s8">
-                    © 2018, 2020 Heather Olcot
+                    © 2025 NULP
                 </div>
                 <div class="col s4">
-                    <a target="_blank" class="grey-text text-lighten-3 footer-icons" href="https://github.com/hfolcot"><i class="fab fa-github"></i></a>
-                    <a target="_blank" class="grey-text text-lighten-3 footer-icons" href="https://www.linkedin.com/in/heather-olcot-b49981159/"><i class="fab fa-linkedin-in"></i></a>
+                    <a target="_blank" class="grey-text text-lighten-3 footer-icons" href="https://github.com/Oksana-34/receipe-book/tree/main"><i class="fab fa-github"></i></a>
                 </div>
             </div>
             <div class="row">
-                <p>Website built as part of Code Institute's Full Stack Web Development course</p>
+                <p>Website built as a Kursach</p>
             </div>
         </div>
     </footer>
@@ -90,20 +89,20 @@
     <!--Login Modal-->
     <div id="login-modal" class="modal">
         <div class="modal-content">
-            <h4>Log in to add, edit or rate recipes!</h4>
+            <h4>Увійдіть щоб додати, редагувати або оцінити рецепт!</h4>
             <form id="login-form">
                 <div class="input-field">
                     <input type="text" id="username" name="username" required />
-                    <label for="username">Username: </label>
+                    <label for="username">Ім'я користувача </label>
                 </div>
                 <div class="input-field">
                     <input type="password" id="password" name="password">
-                    <label for="password">Password: </label>
+                    <label for="password">Пароль: </label>
                 </div>
                 <div class="row">
                     <div class="col s12">
-                        <button class="waves-effect waves-green btn">Log In</button>
-                        <a href="#newusermodal" class="modal-close waves-effect waves-light modal-trigger">Create an account</a>
+                        <button class="waves-effect waves-green btn">Увійти</button>
+                        <a href="#newusermodal" class="modal-close waves-effect waves-light modal-trigger">Створити обліковий запис</a>
                     </div>
                 </div>
             </form>
@@ -133,22 +132,22 @@
     <!--Create User Modal-->
     <div id="newusermodal" class="modal">
         <div class="modal-content">
-            <h4>Log in to add, edit or rate recipes!</h4>
+            <h4>Увійдіть щоб додати, редагувати або оцінити рецепт!</h4>
             <form id="create-new-user">
                 <div class="input-field">
                     <input type="text" id="newusername" name="newusername" required />
-                    <label for="newusername">Username: </label>
+                    <label for="newusername">Ім'я користувача: </label>
                 </div>
                 <div class="input-field">
                     <input type="password" id="newpassword" name="newpassword">
-                    <label for="newpassword">Password: </label>
+                    <label for="newpassword">Пароль: </label>
                 </div>
                 <div class="input-field">
                     <input type="password" id="repeatpassword" name="repeatpassword">
-                    <label for="repeatpassword">Re-enter Password: </label>
+                    <label for="repeatpassword">Повторити пароль: </label>
                 </div>
-                <p class="warning"><strong>WARNING: PASSWORDS ARE STORED IN PLAIN TEXT AND ARE NOT SECURE, PLEASE USE A UNIQUE PASSWORD</strong></p>
-                <button type="submit" class="waves-effect waves-green btn">Create User</button>
+                <p class="warning"><strong>УВАГА: ПАРОЛІ ЗБЕРІГАЮТЬСЯ В ЗВИЧАЙНОМУ ТЕКСТІ І НЕ Є БЕЗПЕЧНИМИ, БУДЬ ЛАСКА, ВИКОРИСТОВУЙТЕ УНІКАЛЬНИЙ ПАРОЛЬ</strong></p>
+                <button type="submit" class="waves-effect waves-green btn">Створити обліковий запис</button>
             </form>
             <div class="row">
                 <div class="col s4 offset-s4" id="new-errors-here"></div>

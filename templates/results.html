@@ -4,7 +4,7 @@
 <!--Search term and browse link-->
     <div class="row">
         <div class="col s12 m4">
-            <p>Results for '{{ search_term }}' sorted by highest rated first.</p>
+            <p>Результати для '{{ search_term }}' відсортованих за найвищим рейтингом.</p>
         </div>
         <div class="col s12 m8 right-align">
             <a href="{{ url_for('get_recipes', page_no=1) }}" class="btn-small waves-effect waves-light"><i class="material-icons right">sync</i>All Recipes</a>
@@ -21,13 +21,13 @@
 <!--Pagination links-->
     <div class="row">
         <div class="col s12">
-            <p> Page {{ page_no }} of {{ total_page_no }}</p>
+            <p> Сторінка {{ page_no }} з {{ total_page_no }}</p>
             <ul class="pagination right-align">
                 <li id="prev-page-upper" {% if page_no|int > 1 %}class="waves-effect" {% else %} class="disabled" {% endif %}>
                     <a {% if page_no|int > 1 %} href="{{url_for('get_recipes', page_no=page_no|int-1)}}"{% endif %}><i class="material-icons">chevron_left</i>Prev</a>
                 </li>
                 <li id="next-page-upper" {% if page_no|int != total_page_no|int %}class="waves-effect" {% else %}class="disabled" {% endif %}>
-                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Next<i class="material-icons">chevron_right</i></a>
+                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Наступна<i class="material-icons">chevron_right</i></a>
                 </li>
             </ul>
         </div>
@@ -59,13 +59,13 @@
 <!--Pagination links-->
     <div class="row">
         <div class="col s12">
-            <p> Page {{ page_no }} of {{ total_page_no }}</p>
+            <p> Сторінка {{ page_no }} з {{ total_page_no }}</p>
             <ul class="pagination right-align">
                 <li id="prev-page-lower" {% if page_no|int > 1 %}class="waves-effect" {% else %} class="disabled" {% endif %}>
                     <a {% if page_no|int > 1 %} href="{{url_for('get_recipes', page_no=page_no|int-1)}}"{% endif %}><i class="material-icons">chevron_left</i>Prev</a>
                 </li>
                 <li id="next-page-lower" {% if page_no|int != total_page_no|int %}class="waves-effect" {% else %}class="disabled" {% endif %}>
-                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Next<i class="material-icons">chevron_right</i></a>
+                    <a {% if page_no|int != total_page_no|int %} href="{{url_for('get_recipes', page_no=page_no|int+1)}}"{% endif %}>Наступна<i class="material-icons">chevron_right</i></a>
                 </li>
             </ul>
         </div>

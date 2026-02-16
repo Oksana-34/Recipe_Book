@@ -6,21 +6,21 @@
         
         <div class="input-field col s12 xl6 offset-xl3 center-align white-background z-depth-2">
             <div class="col s12">
-            <h3 class="page-title">Add a Category</h3>
+            <h3 class="page-title">Додати категорію</h3>
             <form action="{{ url_for('insert_category') }}" method="POST">
                 <div class="row edit_category">
                     <select id="cat_type" name="cat_type">
-                    <option value="" selected>Choose a category heading...</option>
-                    <option value="recipe_type">Recipe Type</option>
-                    <option value="main_ing">Main Ingredients</option>
-                    <option value="health_concerns">Health</option>
+                    <option value="" selected>Оберіть заголовок категорії</option>
+                    <option value="recipe_type">Тип рецепту</option>
+                    <option value="main_ing">Головні інгредієнти</option>
+                    <option value="health_concerns">Здорове харчування</option>
                 </select>
                 </div>
                 <div class="row">
-                    <input placeholder="Give your category a name" name="cat_name" id="cat_name" type="text" class="validate" required>
+                    <input placeholder="Назвіть вашу категорію" name="cat_name" id="cat_name" type="text" class="validate" required>
                 </div>
                 <div class="row">
-                    <button class="btn waves-effect waves-light" type="submit">Add<i class="material-icons right">add</i></button>
+                    <button class="btn waves-effect waves-light" type="submit">Додати<i class="material-icons right"></i></button>
                 </div>
                 <div id="cat-errors-here"></div>
             </form>
@@ -28,11 +28,11 @@
         </div>
         
         <div class="input-field col s12 xl6 offset-xl3 center-align white-background z-depth-2">
-            <h3 class="page-title">Delete a Category</h3>
+            <h3 class="page-title">Видалити категорію</h3>
             <form action="{{ url_for('delete_category') }}" method="POST">
                 <div class="col s12 edit_category">
                     <select name="main_ing" id="delete_main_ing">
-                        <option value="" selected disabled>Main Ingredient</option>
+                        <option value="" selected disabled>Головний інгредієнт</option>
                         {% for i in main_ing %}
                         <option value="{{ i }}">{{ i.capitalize() }}</option>
                         {% endfor %}
@@ -41,7 +41,7 @@
 
                 <div class="col s12 edit_category">
                     <select name="recipe_type" id="delete_recipe_type">
-                        <option value="" selected disabled>Recipe Type</option>
+                        <option value="" selected disabled>Тип рецепту</option>
                         {% for i in recipe_type %}
                         <option value="{{ i }}">{{ i.capitalize() }}</option>
                         {% endfor %}
@@ -50,14 +50,14 @@
                 
                 <div class="col s12 edit_category">
                     <select name="health_concerns" id="delete_health_concerns">
-                        <option value="" selected disabled>Health</option>
+                        <option value="" selected disabled>Здорове харчування</option>
                         {% for i in health_concerns %}
                         <option value="{{ i }}">{{ i.capitalize() }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="row">
-                    <button class="btn waves-effect waves-light" type="submit">Delete<i class="material-icons right">remove</i></button>
+                    <button class="btn waves-effect waves-light" type="submit">Видалити<i class="material-icons right"></i></button>
                 </div>
             </form>
         </div>
