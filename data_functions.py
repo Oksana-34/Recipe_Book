@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 app.config["MONGO_DBNAME"] = "RecipeBook_DB"
 # app.config["MONGO_URI"] = os.getenv('MONGO_URI')
-app.config["MONGO_URI"] = "mongodb+srv://oksanamaksimuk44:Denchik@recipebook.l991w.mongodb.net/?retryWrites=true&w=majority&appName=RecipeBook"
+app.config["MONGO_URI"] = "mongodb://localhost:27017/RecipeBook_DB"
 
 mongo = PyMongo(app)
 

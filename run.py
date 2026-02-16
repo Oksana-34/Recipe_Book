@@ -16,8 +16,7 @@ configure_uploads(app, images)
 
 # config for db access
 app.config["MONGO_DBNAME"] = "RecipeBook_DB"
-app.config[
-    "MONGO_URI"] = "mongodb+srv://oksanamaksimuk44:Denchik@recipebook.l991w.mongodb.net/?retryWrites=true&w=majority&appName=RecipeBook"
+app.config["MONGO_URI"] = "mongodb://127.0.0.1:27017/RecipeBook_DB"
 
 # Глобальні змінні для зберігання списків категорій
 health_concerns_list = []

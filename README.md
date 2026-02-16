@@ -1,4 +1,4 @@
-# Online Cookbook by Heather Olcot
+# Online Cookbook 
 
 ** Project no longer live **
 
