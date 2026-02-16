@@ -304,3 +304,7 @@ of their Data Centric Development module (part of the Full Stack Web Developer c
  ideas and solutions to various issues throughout the project, as well as endless 
  patience and understanding!
 
+=======
+# Recipe_Book
+Онлайн книга рецептів
+>>>>>>> b2e8ae4a599fa59783c8bc25d141d759bf46e8e1
